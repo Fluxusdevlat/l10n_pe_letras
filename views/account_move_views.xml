@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_inherit_letra" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.letra</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Letras" name="letras"
+                      invisible="move_type not in ('out_invoice', 'out_refund')">
+                    <group>
+                        <group>
+                            <field name="letra_state"/>
+                            <field name="letra_count"/>
+                        </group>
+                        <group>
+                            <field name="is_negociable_cavali"/>
+                        </group>
+                    </group>
+                    <group string="CAVALI" invisible="not is_negociable_cavali">
+                        <group>
+                            <field name="cavali_state"/>
+                            <field name="cavali_date"/>
+                        </group>
+                        <group>
+                            <field name="factoring_state"/>
+                            <field name="factoring_entity_id"/>
+                            <field name="factoring_date"/>
+                        </group>
+                    </group>
+                    <field name="letra_line_ids">
+                        <list>
+                            <field name="letra_id"/>
+                            <field name="amount" widget="monetary"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
