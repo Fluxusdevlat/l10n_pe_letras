@@ -39,8 +39,6 @@ Módulo para la gestión completa de Letras de Cambio:
         'views/menu_views.xml',
         'wizards/generar_letras_wizard_views.xml',
         'wizards/renovacion_wizard_views.xml',
-        'wizards/enviar_letras_wizard_views.xml',
-        'views/res_config_settings_views.xml',
         'reports/letra_templates.xml',
     ],
     'demo': [],

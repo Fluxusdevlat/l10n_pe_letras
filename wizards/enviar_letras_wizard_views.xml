@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_enviar_letras_wizard_form" model="ir.ui.view">
+        <field name="name">l10n.pe.letras.email.wizard.form</field>
+        <field name="model">l10n.pe.letras.email.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Enviar Letras por Email">
+                <group>
+                    <group string="Período">
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="state"/>
+                    </group>
+                    <group string="Destino">
+                        <field name="email_to" widget="email"/>
+                        <field name="include_report"/>
+                        <field name="include_excel"/>
+                        <field name="letra_count" readonly="1"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_preview" string="Vista Previa"
+                            type="object" class="btn-secondary"/>
+                    <button name="action_send" string="Enviar Letras"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_enviar_letras_wizard" model="ir.actions.act_window">
+        <field name="name">Enviar Letras por Email</field>
+        <field name="res_model">l10n.pe.letras.email.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_enviar_letras_email"
+              name="Enviar Letras por Email"
+              parent="l10n_pe_letras.menu_letras_operations"
+              action="action_enviar_letras_wizard"
+              sequence="15"/>
+</odoo>

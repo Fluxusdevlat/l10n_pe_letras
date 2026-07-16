@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_letra_protesto_tree" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.protesto.tree</field>
+        <field name="model">l10n.pe.letra.protesto</field>
+        <field name="arch" type="xml">
+            <list string="Protestos">
+                <field name="name"/>
+                <field name="letra_id"/>
+                <field name="partner_id"/>
+                <field name="date_protest"/>
+                <field name="amount" widget="monetary"/>
+                <field name="gastos" widget="monetary"/>
+                <field name="total" widget="monetary"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_letra_protesto_form" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.protesto.form</field>
+        <field name="model">l10n.pe.letra.protesto</field>
+        <field name="arch" type="xml">
+            <form string="Registro de Protesto">
+                <header>
+                    <button name="action_resolve" string="Regularizar"
+                            type="object" invisible="state != 'pending'"
+                            class="btn-success"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="letra_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="date_protest"/>
+                        </group>
+                        <group>
+                            <field name="amount" widget="monetary"/>
+                            <field name="gastos" widget="monetary"/>
+                            <field name="total" widget="monetary"/>
+                        </group>
+                    </group>
+                    <group string="Regularización" invisible="state == 'pending'">
+                        <group>
+                            <field name="resolution_date"/>
+                            <field name="resolution_type"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Observaciones">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_letra_protesto" model="ir.actions.act_window">
+        <field name="name">Protestos</field>
+        <field name="res_model">l10n.pe.letra.protesto</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('letra_id', '=', active_id)]</field>
+        <field name="context">{'default_letra_id': active_id}</field>
+    </record>
+</odoo>

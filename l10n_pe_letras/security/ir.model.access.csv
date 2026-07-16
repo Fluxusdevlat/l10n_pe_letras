@@ -13,4 +13,3 @@ access_letra_renovacion_user,letra.renovacion.user,model_l10n_pe_letra_renovacio
 access_letra_renovacion_manager,letra.renovacion.manager,model_l10n_pe_letra_renovacion,account.group_account_manager,1,1,1,1
 access_letra_generate_wizard_user,letra.generate.wizard.user,model_l10n_pe_letra_generate_wizard,base.group_user,1,0,0,0
 access_letra_renovacion_wizard_user,letra.renovacion.wizard.user,model_l10n_pe_letra_renovacion_wizard,base.group_user,1,0,0,0
-access_letras_email_wizard_user,letras.email.wizard.user,model_l10n_pe_letras_email_wizard,base.group_user,1,0,0,0

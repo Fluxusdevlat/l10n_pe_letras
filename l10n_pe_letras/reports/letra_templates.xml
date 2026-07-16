@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Report definitions -->
+    <record id="action_report_letra" model="ir.actions.report">
+        <field name="name">Letra de Cambio</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_pe_letras.report_letra</field>
+        <field name="report_file">l10n_pe_letras.report_letra</field>
+        <field name="print_report_name">'Letra - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_l10n_pe_letra"/>
+    </record>
+
+    <record id="action_report_letra_planilla" model="ir.actions.report">
+        <field name="name">Planilla de Letras</field>
+        <field name="model">l10n.pe.letra.planilla</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_pe_letras.report_letra_planilla</field>
+        <field name="report_file">l10n_pe_letras.report_letra_planilla</field>
+        <field name="print_report_name">'Planilla - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_l10n_pe_letra_planilla"/>
+    </record>
+
+    <!-- Template: Letra individual -->
+    <template id="report_letra">
+        <t t-name="l10n_pe_letras.report_letra">
+            <main>
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                    <div class="letra-container">
+                        <div class="letra-header">
+                            <h1 class="text-center">LETRA DE CAMBIO</h1>
+                            <p class="text-center">N° <span t-esc="doc.name"/></p>
+                        </div>
+
+                        <div class="letra-body" style="margin-top: 20px;">
+                            <p>
+                                Por la presente letra de cambio, a la orden de
+                                <strong><span t-esc="doc.company_id.name"/></strong>,
+                                domiciliado en <strong><span t-esc="doc.company_id.street or ''"/></strong>,
+                                se servirá(n) Ud(s). pagar la cantidad de:
+                            </p>
+
+                            <div style="border: 1px solid black; padding: 10px; margin: 10px 0;">
+                                <h2 class="text-center">
+                                    S/ <span t-esc="'{:,.2f}'.format(doc.amount_total)"/>
+                                </h2>
+                            </div>
+
+                            <p>
+                                Valor recibido por:
+                                <strong><span t-esc="doc.partner_id.name"/></strong>
+                            </p>
+
+                            <table class="table table-bordered" style="margin-top: 20px;">
+                                <tr>
+                                    <td><strong>Lugar de Emisión:</strong></td>
+                                    <td><span t-esc="doc.company_id.city or ''"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha de Emisión:</strong></td>
+                                    <td><span t-esc="doc.date_emission"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha de Vencimiento:</strong></td>
+                                    <td><span t-esc="doc.date_due"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Banco:</strong></td>
+                                    <td><span t-esc="doc.bank_id.name or ''"/></td>
+                                </tr>
+                            </table>
+
+                            <div style="margin-top: 30px;">
+                                <p><strong>Facturas asociadas:</strong></p>
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Factura</th>
+                                            <th>Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="doc.line_ids" t-as="line">
+                                            <tr>
+                                                <td><span t-esc="line.move_id.name"/></td>
+                                                <td>S/ <span t-esc="'{:,.2f}'.format(line.amount)"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="margin-top: 50px;">
+                                <div style="float: left; width: 45%; text-align: center;">
+                                    <hr style="width: 80%;"/>
+                                    <p>FIRMA DEL GIRADOR</p>
+                                </div>
+                                <div style="float: right; width: 45%; text-align: center;">
+                                    <hr style="width: 80%;"/>
+                                    <p>ACEPTACIÓN</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            </main>
+        </t>
+    </template>
+
+    <!-- Template: Planilla de Letras -->
+    <template id="report_letra_planilla">
+        <t t-name="l10n_pe_letras.report_letra_planilla">
+            <main>
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                    <div class="planilla-container">
+                        <div class="planilla-header">
+                            <h1 class="text-center">PLANILLA DE LETRAS</h1>
+                            <p class="text-center">N° <span t-esc="doc.name"/></p>
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <p>
+                                <strong>Banco:</strong> <span t-esc="doc.bank_id.name or ''"/>
+                                &#160;&#160;&#160;
+                                <strong>Fecha:</strong> <span t-esc="doc.date"/>
+                            </p>
+                        </div>
+
+                        <table class="table table-bordered" style="margin-top: 10px;">
+                            <thead>
+                                <tr>
+                                    <th>N° Letra</th>
+                                    <th>Cliente</th>
+                                    <th>Importe</th>
+                                    <th>Vencimiento</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.letra_ids" t-as="letra">
+                                    <tr>
+                                        <td><span t-esc="letra.name"/></td>
+                                        <td><span t-esc="letra.partner_id.name"/></td>
+                                        <td class="text-right">
+                                            S/ <span t-esc="'{:,.2f}'.format(letra.amount_total)"/>
+                                        </td>
+                                        <td><span t-esc="letra.date_due"/></td>
+                                        <td><span t-esc="letra.state"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2"><strong>TOTAL</strong></td>
+                                    <td class="text-right">
+                                        <strong>
+                                            S/ <span t-esc="'{:,.2f}'.format(doc.amount_total)"/>
+                                        </strong>
+                                    </td>
+                                    <td colspan="2"/>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div style="margin-top: 30px;">
+                            <p><strong>Cantidad de Letras:</strong> <span t-esc="doc.letra_count"/></p>
+                        </div>
+
+                        <div style="margin-top: 50px;">
+                            <div style="float: left; width: 45%; text-align: center;">
+                                <hr style="width: 80%;"/>
+                                <p>ENTREGADO POR</p>
+                                <p><span t-esc="doc.company_id.name"/></p>
+                            </div>
+                            <div style="float: right; width: 45%; text-align: center;">
+                                <hr style="width: 80%;"/>
+                                <p>RECIBIDO POR</p>
+                                <p><span t-esc="doc.bank_id.name or ''"/></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            </main>
+        </t>
+    </template>
+</odoo>

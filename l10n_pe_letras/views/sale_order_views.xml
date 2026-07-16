@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_form_inherit_letra" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.letra</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="partner_commercial_blocked" invisible="1"/>
+                <button name="%(action_letra)d" type="action"
+                        class="oe_stat_button" icon="fa-file-text-o"
+                        invisible="not partner_commercial_blocked"
+                        context="{'search_default_partner_id': partner_id}">
+                    <span>Ver Letras</span>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Letras de Cambio">
+                    <group>
+                        <field name="partner_has_letras_protestadas"/>
+                        <field name="partner_commercial_blocked"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_letra_tree" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.tree</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="arch" type="xml">
+            <list string="Letras de Cambio" default_order="date_emission desc">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total" widget="monetary" sum="Total"/>
+                <field name="amount_residual" widget="monetary"/>
+                <field name="date_emission"/>
+                <field name="date_due"/>
+                <field name="state" widget="badge" decoration-danger="state in ('protested','cancelled')"
+                       decoration-success="state in ('paid')"
+                       decoration-info="state in ('signed','in_bank')"
+                       decoration-warning="state in ('draft','sent')"/>
+                <field name="tipo"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_letra_form" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.form</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="arch" type="xml">
+            <form string="Letra de Cambio">
+                <header>
+                    <button name="action_sent" string="Enviar al Cliente"
+                            type="object" invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_signed" string="Registrar Firma"
+                            type="object" invisible="state != 'sent'"
+                            class="btn-primary"/>
+                    <button name="action_send_to_bank" string="Enviar al Banco"
+                            type="object" invisible="state != 'signed'"
+                            class="btn-primary"/>
+                    <button name="action_register_protest" string="Registrar Protesto"
+                            type="object" invisible="state != 'in_bank'"
+                            class="btn-danger"/>
+                    <button name="action_renew" string="Renovar"
+                            type="object" invisible="state not in ('in_bank', 'protested')"
+                            class="btn-warning"/>
+                    <button name="action_paid" string="Registrar Pago"
+                            type="object" invisible="state not in ('in_bank', 'signed', 'sent')"
+                            class="btn-success"/>
+                    <button name="action_cancel" string="Anular"
+                            type="object" invisible="state not in ('draft', 'sent', 'signed')"
+                            class="btn-secondary"/>
+                    <button name="action_print_letra" string="Imprimir Letra"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,sent,signed,in_bank,paid"
+                           statusbar_colors='{"protested":"red","cancelled":"gray"}'
+                           clickable="False"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_letra_protesto)d" type="action"
+                                class="oe_stat_button" icon="fa-exclamation-triangle"
+                                context="{'default_letra_id': id}">
+                            <div class="o_stat_info">
+                                <field name="protesto_count"/>
+                            </div>
+                            <span>Protestos</span>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id" options="{'no_create': True}"/>
+                            <field name="tipo"/>
+                            <field name="bank_id" options="{'no_create': True}"/>
+                            <field name="planilla_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="date_emission"/>
+                            <field name="date_due"/>
+                            <field name="date_payment" readonly="1"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Importes">
+                        <group>
+                            <field name="amount_total" widget="monetary"/>
+                        </group>
+                        <group>
+                            <field name="amount_paid" widget="monetary"/>
+                            <field name="amount_residual" widget="monetary"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Facturas Asociadas">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="move_id" options="{'no_create': True}"/>
+                                    <field name="amount" widget="monetary"/>
+                                    <field name="amount_residual" widget="monetary"/>
+                                    <field name="date_invoice"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Renovaciones">
+                            <field name="renovacion_destino_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date_due"/>
+                                    <field name="amount_total" widget="monetary"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                            <field name="renovacion_origin_id"/>
+                        </page>
+                        <page string="Observaciones">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_letra_search" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.search</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Letra">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="bank_id"/>
+                <filter string="Borrador" name="state_draft"
+                        domain="[('state','=','draft')]"/>
+                <filter string="Enviada" name="state_sent"
+                        domain="[('state','=','sent')]"/>
+                <filter string="En Banco" name="state_in_bank"
+                        domain="[('state','=','in_bank')]"/>
+                <filter string="Protestadas" name="state_protested"
+                        domain="[('state','=','protested')]"/>
+                <filter string="Pagadas" name="state_paid"
+                        domain="[('state','=','paid')]"/>
+                <separator/>
+                <filter string="Estado" name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Cliente" name="group_partner"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter string="Vencimiento" name="group_due"
+                        context="{'group_by': 'date_due'}"/>
+            </search>
+        </field>
+    </record>
+
+
+
+    <record id="action_letra" model="ir.actions.act_window">
+        <field name="name">Letras de Cambio</field>
+        <field name="res_model">l10n.pe.letra</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p>Gestione las letras de cambio emitidas a sus clientes.</p>
+        </field>
+    </record>
+
+    <record id="action_letra_generate_from_invoices" model="ir.actions.act_window">
+        <field name="name">Generar Letras desde Facturas</field>
+        <field name="res_model">l10n.pe.letra.generate.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+    </record>
+</odoo>
