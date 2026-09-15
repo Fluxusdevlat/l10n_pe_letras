@@ -79,6 +79,11 @@ class Letra(models.Model):
                                    string='Protestos')
     protesto_count = fields.Integer(string='Cant. Protestos',
                                     compute='_compute_protesto_count')
+    protest_date = fields.Date(string='Fecha de Protesto', readonly=True,
+                               tracking=True)
+    debit_note_id = fields.Many2one('account.move',
+                                    string='Nota de Débito (Gastos)',
+                                    readonly=True, copy=False)
 
     renovacion_origin_id = fields.Many2one('l10n.pe.letra',
                                            string='Letra Origen (Renovación)',
@@ -204,8 +209,12 @@ class Letra(models.Model):
             r.state = 'in_bank'
 
     def action_paid(self):
-        self.state = 'paid'
-        self.date_payment = fields.Date.today()
+        for r in self:
+            r.write({
+                'state': 'paid',
+                'date_payment': fields.Date.today(),
+                'amount_paid': r.amount_total,
+            })
 
     def action_cancel(self):
         self.state = 'cancelled'

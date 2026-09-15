@@ -29,12 +29,10 @@ class ResPartner(models.Model):
 
     commercial_blocked = fields.Boolean(
         string='Bloqueado Comercialmente',
-        compute='_compute_commercial_blocked',
-        store=True)
+        compute='_compute_commercial_blocked')
     commercial_block_reason = fields.Char(
         string='Motivo de Bloqueo',
-        compute='_compute_commercial_blocked',
-        store=True)
+        compute='_compute_commercial_blocked')
 
     def _compute_letra_count(self):
         for r in self:
@@ -55,7 +53,9 @@ class ResPartner(models.Model):
             r.letra_protestada_count = len(pendientes)
             r.has_letras_protestadas = bool(pendientes)
 
-    @api.depends('has_letras_protestadas', 'credit_group_id')
+    @api.depends('letra_ids', 'letra_ids.state', 'letra_ids.protesto_ids',
+                 'letra_ids.protesto_ids.state', 'credit_group_id',
+                 'credit_group_id.partner_ids')
     def _compute_commercial_blocked(self):
         for r in self:
             blocked = False

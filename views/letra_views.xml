@@ -104,6 +104,10 @@
                             <field name="unique_number"/>
                             <field name="internal_bank_number"/>
                             <field name="date_payment" readonly="1"/>
+                            <field name="protest_date" readonly="1"
+                                   invisible="not protest_date"/>
+                            <field name="debit_note_id" readonly="1"
+                                   invisible="not debit_note_id"/>
                             <field name="currency_id" groups="base.group_multi_currency"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
