@@ -17,7 +17,9 @@ class GenerateLetrasWizard(models.TransientModel):
             )
             if active_model == 'account.move' and active_ids:
                 invoices = self.env['account.move'].browse(active_ids).filtered(
-                    lambda m: m.move_type == 'out_invoice' and m.payment_state not in ('paid', 'reversed')
+                    lambda m: m.move_type == 'out_invoice'
+                    and m.payment_state not in ('paid', 'reversed')
+                    and m.letra_state != 'total'
                 )
                 if invoices:
                     res['invoice_ids'] = [(6, 0, invoices.ids)]
@@ -26,15 +28,20 @@ class GenerateLetrasWizard(models.TransientModel):
                 invoices = self.env['account.move'].search([
                     ('partner_id', '=', partner_id),
                     ('move_type', '=', 'out_invoice'),
-                    ('payment_state', 'not in', ('paid', 'reversed'))
+                    ('payment_state', 'not in', ('paid', 'reversed')),
+                    ('letra_state', '!=', 'total'),
                 ])
                 if invoices:
                     res['invoice_ids'] = [(6, 0, invoices.ids)]
         return res
 
+    def _invoice_available(self, invoice):
+        return max(invoice.amount_residual - invoice.letra_amount_total, 0.0)
+
     invoice_ids = fields.Many2many('account.move', string='Facturas',
                                    domain=[('move_type', '=', 'out_invoice'),
-                                           ('payment_state', 'not in', ('paid', 'reversed'))],
+                                           ('payment_state', 'not in', ('paid', 'reversed')),
+                                           ('letra_state', '!=', 'total')],
                                    required=True)
     partner_id = fields.Many2one(related='invoice_ids.partner_id',
                                  string='Cliente', readonly=True)
@@ -64,10 +71,11 @@ class GenerateLetrasWizard(models.TransientModel):
     line_ids = fields.One2many('l10n.pe.letra.generate.wizard.line', 'wizard_id',
                                string='Vista Previa de Letras / Cuotas')
 
-    @api.depends('invoice_ids', 'invoice_ids.amount_residual')
+    @api.depends('invoice_ids', 'invoice_ids.amount_residual',
+                 'invoice_ids.letra_amount_total')
     def _compute_amount_total(self):
         for r in self:
-            r.amount_total = sum(r.invoice_ids.mapped('amount_residual'))
+            r.amount_total = sum(r._invoice_available(inv) for inv in r.invoice_ids)
 
     @api.onchange('invoice_ids', 'date_emission')
     def _onchange_invoices_or_date(self):
@@ -99,7 +107,7 @@ class GenerateLetrasWizard(models.TransientModel):
         if self.generate_option == 'multiple_letras':
             if len(self.invoice_ids) == 1 and self.num_letras >= 2:
                 inv = self.invoice_ids[0]
-                total_amount = inv.amount_residual
+                total_amount = self._invoice_available(inv)
                 num = self.num_letras
                 base_amount = round(total_amount / num, 2)
                 remainder = round(total_amount - (base_amount * num), 2)
@@ -145,7 +153,7 @@ class GenerateLetrasWizard(models.TransientModel):
                     'sequence': i,
                     'name': _('Letra por Factura %s') % inv.name,
                     'date_due': due_date,
-                    'amount': inv.amount_residual,
+                    'amount': self._invoice_available(inv),
                     'move_id': inv.id,
                 }))
 
@@ -195,7 +203,7 @@ class GenerateLetrasWizard(models.TransientModel):
                 })
                 letras |= letra
         else:
-            total_amount = inv.amount_residual
+            total_amount = self._invoice_available(inv)
             num = self.num_letras
             base_amount = round(total_amount / num, 2)
             remainder = round(total_amount - (base_amount * num), 2)
@@ -254,7 +262,7 @@ class GenerateLetrasWizard(models.TransientModel):
             LetraLine.create({
                 'letra_id': letra.id,
                 'move_id': inv.id,
-                'amount': inv.amount_residual,
+                'amount': self._invoice_available(inv),
             })
 
         return self._open_letra(letra)
@@ -295,10 +303,11 @@ class GenerateLetrasWizard(models.TransientModel):
                     days = int(inv.partner_id.letra_days_term or 30) if inv.partner_id.letra_days_term else 30
                     due_date = self.date_emission + timedelta(days=days)
 
+                amount_available = self._invoice_available(inv)
                 letra = self.env['l10n.pe.letra'].create({
                     'partner_id': inv.partner_id.id,
                     'bank_id': self.bank_id.id,
-                    'amount_total': inv.amount_residual,
+                    'amount_total': amount_available,
                     'date_emission': self.date_emission,
                     'date_due': due_date,
                     'tipo': 'emission',
@@ -306,7 +315,7 @@ class GenerateLetrasWizard(models.TransientModel):
                 LetraLine.create({
                     'letra_id': letra.id,
                     'move_id': inv.id,
-                    'amount': inv.amount_residual,
+                    'amount': amount_available,
                 })
                 letras |= letra
 

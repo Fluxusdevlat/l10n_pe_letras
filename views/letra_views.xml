@@ -132,7 +132,7 @@
                         <page string="Facturas Asociadas">
                             <field name="line_ids">
                                 <list editable="bottom">
-                                    <field name="move_id" domain="[('move_type', '=', 'out_invoice'), ('payment_state', 'not in', ('paid', 'reversed')), ('partner_id', '=?', parent.partner_id)]" options="{'no_create': True}"/>
+                                    <field name="move_id" domain="[('move_type', '=', 'out_invoice'), ('payment_state', 'not in', ('paid', 'reversed')), ('partner_id', '=?', parent.partner_id), ('letra_state', '!=', 'total')]" options="{'no_create': True}"/>
                                     <field name="amount" widget="monetary"/>
                                     <field name="amount_residual" widget="monetary"/>
                                     <field name="date_invoice"/>

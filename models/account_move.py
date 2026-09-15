@@ -10,7 +10,8 @@ class AccountMove(models.Model):
                                  compute='_compute_letra_count')
     letra_amount_total = fields.Monetary(
         string='Monto en Letras',
-        compute='_compute_letra_amount')
+        compute='_compute_letra_amount',
+        store=True)
 
     letra_state = fields.Selection([
         ('without', 'Sin Letra'),
@@ -36,20 +37,29 @@ class AccountMove(models.Model):
                                           domain=[('is_company', '=', True)])
     factoring_date = fields.Date(string='Fecha Cesión')
 
+    @api.depends('letra_line_ids', 'letra_line_ids.amount',
+                 'letra_line_ids.letra_id.state')
     def _compute_letra_count(self):
         for r in self:
-            r.letra_count = len(r.letra_line_ids)
+            lines = r.letra_line_ids.filtered(
+                lambda l: l.letra_id.state != 'cancelled')
+            r.letra_count = len(lines)
 
+    @api.depends('letra_line_ids', 'letra_line_ids.amount',
+                 'letra_line_ids.letra_id.state')
     def _compute_letra_amount(self):
         for r in self:
-            r.letra_amount_total = sum(r.letra_line_ids.mapped('amount'))
+            lines = r.letra_line_ids.filtered(
+                lambda l: l.letra_id.state != 'cancelled')
+            r.letra_amount_total = sum(lines.mapped('amount'))
 
     @api.depends('amount_residual', 'letra_amount_total')
     def _compute_letra_state(self):
         for r in self:
-            if r.letra_amount_total == 0:
+            available = r.amount_residual - r.letra_amount_total
+            if r.letra_amount_total <= 0:
                 r.letra_state = 'without'
-            elif r.letra_amount_total >= r.amount_total:
+            elif available <= 0.005:
                 r.letra_state = 'total'
             else:
                 r.letra_state = 'partial'

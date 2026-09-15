@@ -287,7 +287,24 @@ class LetraLine(models.Model):
     @api.onchange('move_id')
     def _onchange_move_id_amount(self):
         if self.move_id and not self.amount:
-            self.amount = self.move_id.amount_residual
+            self.amount = max(
+                self.move_id.amount_residual - self.move_id.letra_amount_total,
+                0.0)
+
+    @api.constrains('amount', 'move_id')
+    def _check_invoice_amount_not_exceeded(self):
+        for line in self:
+            if not line.move_id:
+                continue
+            move = line.move_id
+            total = sum(move.letra_line_ids.filtered(
+                lambda l: l.letra_id.state != 'cancelled').mapped('amount'))
+            if total > move.amount_total + 0.005:
+                raise ValidationError(_(
+                    'La suma de los montos en letras de la factura %s '
+                    '(S/ %s) supera el total de la factura (S/ %s).'
+                ) % (move.name, '{:,.2f}'.format(total),
+                     '{:,.2f}'.format(move.amount_total)))
 
     _check_amount_positive = models.Constraint(
         'CHECK(amount > 0)',
