@@ -1,6 +1,6 @@
 {
     'name': 'Letras de Cambio - Perú',
-    'version': '19.0.1.30.0',
+    'version': '19.0.1.31.0',
 
 
 

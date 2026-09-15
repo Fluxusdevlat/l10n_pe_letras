@@ -40,8 +40,13 @@
                     <button name="action_signed" string="Registrar Firma"
                             type="object" invisible="state != 'sent' or not can_sign or instrument_type == 'cabal'"
                             class="btn-primary"/>
+                    <button string="Registrar Firma"
+                            disabled="1"
+                            invisible="state != 'sent' or can_sign or instrument_type == 'cabal'"
+                            class="btn-secondary"/>
                     <button name="action_send_to_bank" string="Enviar al Banco"
-                            type="object" invisible="state not in ('signed', 'draft', 'sent')"
+                            type="object"
+                            invisible="state != 'signed' and not (instrument_type == 'cabal' and state in ('draft', 'sent'))"
                             class="btn-primary"/>
                     <button name="action_register_protest" string="Registrar Protesto"
                             type="object" invisible="state != 'in_bank'"
@@ -50,7 +55,7 @@
                             type="object" invisible="state not in ('in_bank', 'protested')"
                             class="btn-warning"/>
                     <button name="action_paid" string="Registrar Pago"
-                            type="object" invisible="state not in ('in_bank', 'signed', 'sent')"
+                            type="object" invisible="state not in ('in_bank', 'signed')"
                             class="btn-success"/>
                     <button name="action_cancel" string="Anular"
                             type="object" invisible="state not in ('draft', 'sent', 'signed')"
