@@ -2,7 +2,7 @@
 ## MÓDULO DE LETRAS DE CAMBIO Y COBRANZAS — PERÚ
 ### Curpisco · Odoo 19
 
-> **Versión del módulo documentada:** `19.0.1.35.0`
+> **Versión del módulo documentada:** `19.0.1.40.0`
 > **Compañía:** CURPISCO S.A.C. · Moneda: PEN (S/)
 > **Última actualización:** Septiembre 2026
 
@@ -58,19 +58,24 @@ El módulo tiene una aplicación propia llamada **Letras de Cambio** (ícono en 
 ```
 Letras de Cambio
 ├── Operaciones
-│   ├── Letras de Cambio              (listado general de letras)
-│   ├── Operaciones Cabal             (listado filtrado por tipo Cabal)
+│   ├── Letras de Cambio              (listado general; Lista/Kanban/Calendario/Pivot/Gráfico)
+│   ├── Operaciones Cabal             (listado filtrado por tipo Cabal — reporte de Cabal)
 │   ├── Planillas                     (planillas de envío al banco)
 │   └── Generar Letras desde Facturas (asistente)
 ├── Seguimiento
+│   ├── Letras en Cartera             (borrador/enviada/firmada)
 │   ├── Proyección Semanal            (pivot / gráfico)
 │   ├── Protestos                     (registro de protestos)
+│   ├── Letras Protestadas            (listado filtrado)
 │   └── Renovaciones                  (historial de renovaciones)
 ├── Reportes
 │   ├── Proyección Semanal (Pivot)
+│   ├── Estado de Cuenta              (elige cliente → Imprimir Estado de Cuenta)
 │   └── Exportar Resumen Excel / Email
 └── Configuración
-    └── Grupos Empresariales
+    ├── Grupos Empresariales
+    ├── Bancos
+    └── Secuencias
 ```
 
 **Acceso alternativo desde Contabilidad:** `Contabilidad → Clientes → Letras de Cambio`.
@@ -128,6 +133,9 @@ Agrupa varias razones sociales que **comparten una misma línea de crédito** (e
 | **Crédito Disponible** | `credit_available` | `Línea Asignada − Crédito Utilizado`. |
 | **Pedidos Pendientes** | `pending_orders_amount` | Pedidos de venta confirmados pendientes de facturar. |
 | **Facturado** | `invoiced_amount` | Facturas emitidas pendientes de pago. |
+| **% de Uso** | `credit_usage_pct` | Porcentaje consumido de la línea (`Crédito Utilizado / Línea`). |
+| **Aprobación de Excepción (Techo Global)** | `exception_approved` | Marcar cuando gerencia autorice superar el **techo agregado** de la compañía (RN-007). |
+| **Aprobado por** | `exception_approved_by` | Usuario que autorizó la excepción. |
 
 #### 🖱️ Guía paso a paso
 1. Ve a **Letras de Cambio → Configuración → Grupos Empresariales**.
@@ -149,12 +157,14 @@ Define el correo destino por defecto del wizard **Enviar Letras por Email**.
 | Campo | Técnico | Descripción |
 |---|---|---|
 | **Email para envío de Letras** | `letras_email_to` | Correo destino predeterminado (parámetro `l10n_pe_letras.email_to`). |
+| **Techo Agregado de Líneas de Crédito** | `letras_global_credit_limit` | Monto máximo que puede sumar el total de líneas de crédito de **todos** los grupos. `0` = sin límite (RN-007). |
 
 #### 🖱️ Guía paso a paso
 1. Ve a **Ajustes**.
 2. Baja hasta la sección **Letras de Cambio** (visible para Administradores de Contabilidad).
 3. En **Email para envío**, escribe el correo (ej. `cobranzas@curpisco.com`).
-4. Guarda.
+4. En **Techo agregado de líneas de crédito**, ingresa el monto máximo (ej. `11360000.00`) o `0`.
+5. Guarda.
 
 ---
 
@@ -261,6 +271,9 @@ Para evitar el **doble conteo**, el sistema controla el estado de cada factura r
 ---
 
 ## 5. CICLO DE VIDA DE LA LETRA (PASO A PASO)
+
+### Vistas disponibles
+En **Operaciones → Letras de Cambio** puedes alternar entre **Lista**, **Kanban** (agrupado por estado, ideal para la ronda semanal), **Calendario** (vencimientos por mes), **Pivot** y **Gráfico**.
 
 ### Estados
 `Borrador` → `Enviada` → `Firmada` → `En Banco` → `Pagada` (o `Protestada`). También `Cancelada` y `Renovada`.
@@ -477,22 +490,32 @@ Reemplaza el Excel manual de la reunión de los lunes.
 ### Reglas aplicadas
 | Regla | Descripción |
 |---|---|
+| **RN-001 · Facturas del mismo cliente** | Solo se pueden asociar facturas de cliente **publicadas**, **no pagadas** y del **mismo cliente**. |
 | **Facturas no cubiertas** | No se pueden elegir facturas ya **totalmente** cubiertas por letras; el monto se limita al saldo por letrear. |
-| **Firma obligatoria** | No se registra la firma ni se envía al banco una *Letra de Cambio* sin el **PDF firmado** cargado. |
+| **RN-003 · Firma obligatoria** | No se registra la firma ni se envía al banco una *Letra de Cambio* sin el **PDF firmado** cargado. |
 | **Solo PDF** | El campo de letra firmada únicamente acepta archivos **PDF**. |
-| **Plazo de renovación** | Toda renovación se genera a **30 días**. |
-| **Nota de débito** | Al protestar con gastos, se genera la nota de débito al cliente. |
+| **RN-004 · Plazo de renovación** | Toda renovación se genera a **30 días**. |
+| **RN-005 · Nota de débito** | Al protestar con gastos, se genera la nota de débito al cliente. |
+| **RN-007 · Techo agregado** | La suma de líneas de crédito de los grupos no puede superar el **Techo Agregado** de la compañía, salvo **Aprobación de Excepción**. |
 | **Anti doble conteo** | La suma de montos en letras de una factura **no puede superar** su total. |
 | **Canceladas** | Las letras canceladas dejan de contar; la factura vuelve a quedar disponible. |
+| **Importe automático** | El importe de la letra se calcula desde las facturas asociadas (campo computado, válido también por importación/API). |
 
-### Bloqueo comercial en Pedidos de Venta (`sale.order`)
-- **Protestos:** si el cliente está bloqueado (`commercial_blocked`), Odoo **impide confirmar** el pedido con el mensaje de motivo.
-- **Exceso de crédito:** si el cliente pertenece a un Grupo Empresarial y el **crédito disponible** del grupo es menor al total del pedido, se **impide confirmar** el pedido.
+### Bloqueo comercial
+- **Pedidos de Venta (`sale.order`):** si el cliente está bloqueado, Odoo **impide confirmar** el pedido. Si el cliente pertenece a un Grupo y el **crédito disponible** es menor al total del pedido, también se **impide confirmar**.
+- **Facturas (`account.move`):** no se puede **validar** una factura de cliente si el cliente está bloqueado (la nota de débito de protesto se permite). 
+- **Alerta preventiva:** cuando el cliente usa **≥ 90%** de la línea de su grupo, aparece un **aviso amarillo** en la ficha del cliente y en el Pedido de Venta.
+
+### Automatizaciones
+- **Recordatorio de vencimiento:** una acción programada diaria (**Letras: recordatorio de vencimiento**) crea una **actividad** para las letras *En Banco* que vencen en los próximos 7 días (cubre día 6/7/8). Se ven en el ícono de **Actividades** ⏰.
 
 ### Seguridad y acceso
-- **Usuario interno** (`base.group_user`): puede **ver, crear y editar** (no eliminar).
-- **Administrador de Contabilidad** (`account.group_account_manager`): **todos** los permisos, incluida eliminación y configuración.
+- **Letras de Cambio / Usuario** (`group_letra_user`): ver, crear y editar (sin eliminar).
+- **Letras de Cambio / Administrador** (`group_letra_manager`): todos los permisos (incluida eliminación).
+- También accesible a usuarios internos y Administradores de Contabilidad (permisos estándar).
 - **Multi-compañía:** las letras, planillas y grupos solo son visibles para las compañías del usuario.
+
+> ⚠️ Asigna el grupo **Letras de Cambio / Usuario** a la operadora (Ajustes → Usuarios).
 
 ---
 
@@ -506,6 +529,9 @@ Reemplaza el Excel manual de la reunión de los lunes.
 | 4 | **Estado de Cuenta de Letras** (`action_report_estado_cuenta_partner`) | PDF | Cliente → **Imprimir → Estado de Cuenta de Letras** |
 | 5 | **Proyección Semanal** (`action_proyeccion_cobranza`) | Pivot / Gráfico | `Reportes → Proyección Semanal (Pivot)` |
 | 6 | **Resumen Ejecutivo de Cartera** | Excel `.xlsx` | `Reportes → Exportar Resumen Excel / Email` |
+| 7 | **Letras en Cartera** (`action_letra_cartera`) | Lista / Kanban / Calendario | `Seguimiento → Letras en Cartera` |
+| 8 | **Letras Protestadas** (`action_letra_protestadas`) | Lista | `Seguimiento → Letras Protestadas` |
+| 9 | **Cabal** (`action_letra_cabal`) | Lista / Kanban | `Operaciones → Operaciones Cabal` |
 
 ### Detalle
 1. **Letra de Cambio (PDF).** Formato oficial: girador (Curpisco), aceptante, importe en soles, fechas, banco, tabla de facturas y recuadros de **Firma del Girador** y **Aceptación**. Sirve para imprimir y enviar al cliente **a firmar**.
