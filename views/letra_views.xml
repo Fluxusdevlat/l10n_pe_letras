@@ -63,6 +63,9 @@
                     <button name="action_print_letra" string="Imprimir Letra"
                             type="object"
                             class="btn-secondary"/>
+                    <button name="action_view_signed_document" string="Ver Letra Firmada"
+                            type="object" class="btn-secondary"
+                            invisible="not signed_document"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,sent,signed,in_bank,paid"
                            statusbar_colors='{"protested":"red","cancelled":"gray"}'

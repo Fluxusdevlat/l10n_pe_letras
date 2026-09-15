@@ -245,6 +245,17 @@ class Letra(models.Model):
         self.ensure_one()
         return self.env.ref('l10n_pe_letras.action_report_letra').report_action(self)
 
+    def action_view_signed_document(self):
+        self.ensure_one()
+        if not self.signed_document:
+            raise UserError(_('Aún no se ha cargado la letra firmada.'))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/l10n.pe.letra/%s/signed_document/%s?download=true'
+                   % (self.id, self.signed_filename or 'letra_firmada.pdf'),
+            'target': 'new',
+        }
+
     def name_get(self):
         res = []
         for r in self:
