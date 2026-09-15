@@ -11,6 +11,7 @@
    - [2.1 Configuración de Clientes (res.partner)](#21-configuración-de-clientes-respartner)
    - [2.2 Configuración de Grupos Empresariales (l10n.pe.credit.group)](#22-configuración-de-grupos-empresariales-l10npecreditgroup)
    - [2.3 Configuración de Parámetros Globales](#23-configuración-de-parámetros-globales)
+   - [2.4 Grupos de Seguridad del Módulo](#24-grupos-de-seguridad-del-módulo)
 3. [Operación 1: Emisión y Generación de Letras de Cambio](#3-operación-1-emisión-y-generación-de-letras-de-cambio)
    - [3.1 Generación Automática desde Facturas de Cliente](#31-generación-automática-desde-facturas-de-cliente)
    - [3.2 Registro y Gestión de la Letra de Cambio Formulario a Detalle](#32-registro-y-gestión-de-la-letra-de-cambio-formulario-a-detalle)
@@ -51,7 +52,7 @@ Permite asignar el plazo de crédito predeterminado para las letras de cada clie
 #### Explicación Campo por Campo:
 - **Grupo Empresarial (`credit_group_id`):** Selecciona el grupo corporativo al que pertenece el cliente. Si pertenece a un grupo, la línea de crédito se calculará de forma acumulada entre todas las empresas del grupo.
 - **Plazo de Crédito (Letras) (`letra_days_term`):** Define el plazo predeterminado en días para el cálculo automático de la fecha de vencimiento (`30 Días`, `60 Días`, `90 Días`, `120 Días`, `150 Días (Anticipo)`).
-- **Bloqueado Comercialmente (`commercial_blocked`):** Indicador tipo Checkbox (solo lectura / computado). Se marca automáticamente en **Víspera de Bloqueo** si el cliente o su grupo empresarial tienen letras protestadas pendientes.
+- **Bloqueado Comercialmente (`commercial_blocked`):** Indicador tipo Checkbox (solo lectura / computado). Se marca automáticamente en **rojo/activo** si el cliente o su grupo empresarial tienen letras protestadas pendientes de regularizar. El valor se recalcula en tiempo real cada vez que se crea o regulariza un protesto.
 - **Motivo de Bloqueo (`commercial_block_reason`):** Muestra el texto explicativo del motivo por el cual el cliente no puede recibir nuevos pedidos confirmados.
 - **Cant. Letras (`letra_count`):** Contador inteligente que muestra el total de letras activas en circulación del cliente.
 - **Tiene Letras Protestadas (`has_letras_protestadas`):** Marca `True` si el cliente tiene al menos un protesto pendiente de regularizar.
@@ -80,6 +81,8 @@ Controla el techo agregado de crédito otorgado a un conjunto de razones sociale
 - **Crédito Disponible (`credit_available`):** Resultado de `Línea Asignada - Crédito Utilizado`.
 - **Pedidos Pendientes (`pending_orders_amount`):** Suma total de cotizaciones/pedidos de venta confirmados pendientes de facturación.
 - **Facturado (`invoiced_amount`):** Suma total de facturas emitidas pendientes de pago.
+- **Aprobación de Excepción (Techo Global) (`exception_approved`):** Casilla que debe marcar gerencia cuando la suma de líneas del grupo supera el **Techo Agregado** configurado en la compañía; sin esta marca el sistema bloquea el guardado del grupo.
+- **Aprobado por (`exception_approved_by`):** Usuario que autorizó la excepción al techo global.
 
 #### 🖱️ Guía Clic a Clic para crear un Grupo Empresarial:
 1. Ve al menú principal **Letras de Cambio** -> **Configuración** -> **Grupos Empresariales**.
@@ -88,18 +91,42 @@ Controla el techo agregado de crédito otorgado a un conjunto de razones sociale
 4. Ingresa la **Línea de Crédito Asignada** (ejemplo: `150000.00`).
 5. En la tabla **Empresas del Grupo**, haz clic en **Agregar una línea** y selecciona las empresas pertenecientes.
 6. Haz clic en **Guardar**.
+   > *Si el sistema muestra un error indicando que se supera el **Techo Agregado** de la compañía, solicita autorización de gerencia y marca la casilla **Aprobación de Excepción (Techo Global)** para poder guardar (ver Regla RN-007).*
 
 ---
 
 ### 2.3 Configuración de Parámetros Globales
 
 #### ¿Para qué sirve?
-Define el correo electrónico corporativo al cual se enviará por defecto el resumen masivo de letras y reportes en Excel.
+Define el correo electrónico corporativo al cual se enviará por defecto el resumen masivo de letras y reportes en Excel, y el techo agregado de líneas de crédito de la compañía.
+
+#### Explicación Campo por Campo:
+- **Email para envío de Letras:** Correo destino predeterminado para el wizard *Enviar Letras por Email*.
+- **Techo Agregado de Líneas de Crédito (`letras_global_credit_limit`):** Monto máximo (S/) que puede sumar el total de líneas de crédito otorgadas a **todos** los grupos empresariales de la compañía. Si un grupo se guarda superando este techo (y no tiene marcada la *Aprobación de Excepción*), el sistema lo impide (Regla RN-007). Use `0` para no aplicar límite.
 
 #### 🖱️ Guía Clic a Clic:
 1. Ve a **Ajustes** -> desplázate a la sección **Letras de Cambio**.
 2. En el campo **Email para envío de Letras**, ingresa la dirección de correo (ejemplo: `cobranzas@curpisco.com`).
-3. Haz clic en **Guardar**.
+3. En el campo **Techo agregado de líneas de crédito**, ingresa el monto máximo (ejemplo: `11360000.00`) o `0` para desactivarlo.
+4. Haz clic en **Guardar**.
+
+---
+
+### 2.4 Grupos de Seguridad del Módulo
+
+El módulo define dos grupos de seguridad propios. **Es obligatorio asignar** a los operadores de créditos y cobranzas, de lo contrario no podrán crear ni editar letras, planillas, protestos ni renovaciones.
+
+| Grupo | A quién asignar | Permisos |
+|---|---|---|
+| **Letras de Cambio / Usuario** | Operadora de Créditos y Cobranzas (Katy) | Crear, leer y modificar letras, planillas, protestos y renovaciones. Sin eliminar. |
+| **Letras de Cambio / Administrador** | Responsable de sistemas / jefatura | Todos los permisos, incluida la eliminación y la configuración. |
+
+#### 🖱️ Guía Clic a Clic para asignar el grupo:
+1. Ve a **Ajustes** -> **Usuarios y Compañías** -> **Usuarios**.
+2. Abre el usuario (por ejemplo, Katy).
+3. En la pestaña **Derechos de acceso**, en la sección **Letras de Cambio**, selecciona **Usuario** o **Administrador** según corresponda.
+4. Haz clic en **Guardar**.
+   > *Nota:* El usuario administrador/superusuario de Odoo no requiere asignación, ya que omite todas las reglas de acceso.
 
 ---
 
@@ -166,6 +193,7 @@ Existen dos maneras de emitir una letra: automáticamente desde facturas publica
 - **Tipo (`tipo`):** `Emisión` (letra original de venta) o `Canje` (letra producto de renovación o canje especial).
 - **Banco (`bank_id`):** Banco asignado para el descuento (BCP, Scotiabank, BBVA).
 - **Planilla (`planilla_id`):** Planilla bancaria en la que fue enviada la letra (Autocompletado al asociar a planilla).
+- **Cargar Letra Firmada (PDF / Foto) (`signed_document`):** Campo de carga de archivo donde se sube la letra firmada y sellada por el cliente. **Es obligatorio para poder registrar la firma y enviar al banco** (excepto en instrumentos tipo `Cabal`).
 
 ##### Fechas y Plazos:
 - **Fecha de Emisión (`date_emission`):** Fecha de expedición del documento.
@@ -173,7 +201,9 @@ Existen dos maneras de emitir una letra: automáticamente desde facturas publica
 - **Fecha de Vencimiento (`date_due`):** Fecha máxima de pago sin protesto.
 - **N° Único (Banco) (`unique_number`):** Código numérico asignado por el banco al ingresar a cobranza/descuento (necesario para que el cliente pague en ventanilla).
 - **Valor Banco (Interno) (`internal_bank_number`):** Número de control interno del banco para conciliaciones.
-- **Fecha de Pago (`date_payment`):** Fecha en la que el cliente o banco canceló la letra.
+- **Fecha de Pago (`date_payment`):** Fecha en la que el cliente o banco canceló la letra (se llena al presionar *Registrar Pago*).
+- **Fecha de Protesto (`protest_date`):** Fecha en la que el banco ejecutó el protesto. Aparece (solo lectura) únicamente cuando la letra fue protestada.
+- **Nota de Débito (Gastos) (`debit_note_id`):** Vínculo a la nota de débito generada automáticamente por los gastos y costas del protesto.
 
 ##### Importes:
 - **Importe Total (`amount_total`):** Valor nominal de la letra.
@@ -195,21 +225,21 @@ Cada letra sigue una secuencia estricta de botones de acción:
 2. El estado cambiará a **Enviada**. La letra puede imprimirse en PDF mediante el botón **Imprimir Letra**.
 
 #### Paso 2: Registrar Firma y Adjuntar Documento (`sent` ➔ `signed`)
-1. Una vez que el cliente devuelve la letra física con firma y sello oficial:
-2. Ve al panel lateral de comentarios (**Chatter**) a la derecha del formulario.
-3. Haz clic en el icono de **Adjuntar archivo** (clip/cámara) y sube la imagen o PDF de la letra firmada.
-4. Haz clic en el botón **Registrar Firma** en la barra superior.
-5. El estado cambiará a **Firmada**.
+1. Una vez que el cliente devuelve la letra física con firma y sello oficial, sube la imagen o PDF en el campo **Cargar Letra Firmada (PDF / Foto)** (*Datos Principales*).
+   > *También puede adjuntarlo desde el panel lateral de comentarios (**Chatter**), pero el campo dedicado es el método recomendado.*
+2. Mientras no exista documento cargado, verás un aviso azul y el botón **Registrar Firma** **no aparecerá** (no podrás registrar la firma).
+3. Al cargar el documento, aparecerá un aviso verde y el botón **Registrar Firma** se habilitará.
+4. Haz clic en **Registrar Firma**. El estado cambiará a **Firmada**.
 
 #### Paso 3: Enviar al Banco (`signed` ➔ `in_bank`)
 1. Haz clic en el botón **Enviar al Banco**.
-2. **Validación de Seguridad:** Si el instrumento es `Letra de Cambio` y no has adjuntado la imagen firmada en el chatter, el sistema mostrará un bloqueo de seguridad impidiendo el envío.
+2. **Validación de Seguridad:** Si el instrumento es `Letra de Cambio` y no has cargado la letra firmada (campo `signed_document` o adjunto en el chatter), el sistema mostrará un bloqueo de seguridad impidiendo el envío.
 3. Al validar la presencia del adjunto, la letra pasará al estado **En Banco**.
 
 #### Paso 4: Registrar Pago (`in_bank` ➔ `paid`)
 1. Cuando el banco confirma la cancelación por parte del cliente:
 2. Haz clic en el botón **Registrar Pago**.
-3. El estado cambiará a **Pagada** y se registrará la fecha de pago actual.
+3. El estado cambiará a **Pagada**, se registrará la fecha de pago actual y el **Saldo Pendiente** quedará en `0.00` (el *Importe Pagado* se iguala al *Importe Total*).
 
 ---
 
@@ -248,7 +278,7 @@ Agrupa un conjunto de letras firmadas para enviarlas físicamente y electrónica
 3. Selecciona el **Banco** (ejemplo: `Banco de Crédito del Perú - BCP`).
 4. En la tabla **Letras**, haz clic en **Agregar una línea** y selecciona todas las letras en estado `Firmada` o `Borrador` que se enviarán al banco.
 5. Haz clic en **Guardar**.
-6. Haz clic en **Enviar al Banco**. El sistema pasará la planilla a estado `Enviada al Banco` y cambiará automáticamente todas las letras contenidas al estado `En Banco`.
+6. Haz clic en **Enviar al Banco** para pasar la planilla a estado `Enviada al Banco`. Luego, abre cada letra y usa **Enviar al Banco** en ella (valida el documento firmado), de modo que quede en estado `En Banco` asignada a esta planilla.
 7. Haz clic en los botones de reporte en la parte superior:
    - **Imprimir Planilla:** Genera el documento resumen en PDF con la lista de letras para la firma del Gerente.
    - **Imprimir Letras:** Descarga en un solo archivo PDF todas las letras incluidas en la planilla.
@@ -271,8 +301,9 @@ Si al vencimiento de la letra (más 8 días de gracia concedidos por el banco), 
 4. Haz clic en **Guardar / Confirmar**.
 
 ### ⚡ EFECTOS AUTOMÁTICOS DEL PROTESTO EN EL SISTEMA:
-1. **Cambio de Estado:** La letra pasa automáticamente a estado **Protestada**.
-2. **Generación de Nota de Débito:** El sistema crea automáticamente un borrador de **Nota de Débito** (`account.move`) a nombre del cliente por el concepto de *Gastos y Costas de Protesto Bancario*.
+1. **Cambio de Estado:** La letra pasa automáticamente a estado **Protestada** y registra la **Fecha de Protesto**.
+2. **Generación de Nota de Débito:** Si se ingresó un monto en **Gastos y Costas**, el sistema crea automáticamente un borrador de **Nota de Débito** (`account.move`) en el diario de ventas a nombre del cliente por el concepto de *Gastos y Costas de Protesto Bancario*. El documento queda vinculado en el campo **Nota de Débito (Gastos)** de la letra.
+   > *Si los gastos son `0.00`, no se genera nota de débito.*
 3. **Bloqueo Comercial Automático:**
    - El cliente y todas las empresas de su **Grupo Empresarial** quedan marcados con `commercial_blocked = True`.
    - Si un vendedor intenta confirmar un **Pedido de Venta** (`sale.order.action_confirm`) para este cliente o grupo, Odoo **bloqueará la transacción** mostrando el mensaje de error:
@@ -334,16 +365,16 @@ Reemplaza por completo las plantillas manuales de Excel para la reunión ejecuti
 ## 9. SEGUIMIENTO 4: ENVÍO MASIVO POR EMAIL Y EXPORTACIÓN EXCEL
 
 ### 🖱️ Guía Clic a Clic para exportar y enviar el reporte semanal:
-1. Ve a **Letras de Cambio** -> **Operaciones** -> **Letras de Cambio**.
-2. Si deseas enviar un grupo específico, selecciona las letras y haz clic en la acción correspondiente o abre el wizard de correo.
-3. En la ventana del wizard **Enviar Letras por Email**:
+1. Ve a **Letras de Cambio** -> **Operaciones** -> **Enviar Letras por Email** (o **Reportes** -> **Exportar Resumen Excel / Email**).
+2. En la ventana del wizard **Enviar Letras por Email**:
    - **Desde / Hasta:** Define el rango de fechas de emisión a consultar.
    - **Enviar a:** Dirección de correo electrónico destino (autocompletado con la configuración global).
    - **Filtrar por Estado:** Selecciona el estado (`En Banco`, `Protestada`, etc.).
    - **Incluir PDF por letra:** Marca `True` si deseas adjuntar los PDFs individuales de cada letra.
    - **Incluir Excel resumen:** Marca `True` para generar la hoja de cálculo profesional.
-4. Haz clic en **Enviar**.
-5. El sistema generará el archivo `.xlsx` con estilos ejecutivos, formatos de moneda, encabezados institucionales y totales automáticos, enviándolo por email.
+3. Haz clic en **Enviar Letras**.
+4. El sistema enviará un **correo electrónico real** con el archivo `.xlsx` (estilos ejecutivos, formato de moneda y totales) y, si lo marcaste, los PDFs de cada letra adjuntos. El envío queda registrado en el **Chatter** de la primera letra del lote para trazabilidad.
+   > *Para que el correo salga, el servidor de correo saliente debe estar configurado en Odoo (Ajustes -> Correo saliente).*
 
 ---
 
@@ -354,15 +385,27 @@ Reemplaza por completo las plantillas manuales de Excel para la reunión ejecuti
 | Estado Actual | Botón Disponible | Siguiente Estado | Requisito / Validación de Seguridad |
 |---|---|---|---|
 | `draft` (Borrador) | Enviar al Cliente | `sent` | Ninguno. |
-| `sent` (Enviada) | Registrar Firma | `signed` | Se recomienda adjuntar PDF/imagen en Chatter. |
-| `signed` (Firmada) | Enviar al Banco | `in_bank` | **Obligatorio:** Adjunto de firma en Chatter (si es tipo Letra). |
-| `in_bank` (En Banco) | Registrar Pago | `paid` | Registra la fecha de cobro final. |
-| `in_bank` (En Banco) | Registrar Protesto | `protested` | Crea registro de protesto y Nota de Débito automática. |
+| `sent` (Enviada) | Registrar Firma | `signed` | **Obligatorio:** Documento firmado cargado en `signed_document` (si es tipo Letra). El botón no aparece hasta cargarlo. |
+| `signed` (Firmada) | Enviar al Banco | `in_bank` | **Obligatorio:** Documento firmado cargado (campo o chatter) si es tipo Letra. |
+| `in_bank` (En Banco) | Registrar Pago | `paid` | Registra la fecha de cobro final y deja el saldo en `0.00`. |
+| `in_bank` (En Banco) | Registrar Protesto | `protested` | Crea registro de protesto y Nota de Débito automática (si hay gastos). |
 | `in_bank` / `protested` | Renovar | `renewed` | Genera nueva letra a 30 días fijados por el banco. |
+
+### Reglas de Negocio Aplicadas en el Módulo:
+
+- **RN-001 (Facturas asociadas):** Solo se pueden asociar a una letra facturas de cliente, **publicadas** y **no pagadas**, y todas deben ser del **mismo cliente**. El sistema bloquea el guardado si no se cumple.
+- **RN-003 (Firma obligatoria):** No se puede registrar la firma ni enviar al banco una letra tipo `Letra de Cambio` sin el documento firmado cargado.
+- **RN-004 (Plazo de renovación):** Toda renovación se genera forzosamente a **30 días**.
+- **RN-005 (Nota de débito por protesto):** Al protestar con gastos, se genera la nota de débito al cliente.
+- **RN-007 (Techo agregado):** La suma de líneas de crédito de todos los grupos no puede superar el **Techo Agregado** de la compañía, salvo que el grupo tenga marcada la **Aprobación de Excepción**.
+- **RN-009 (Cabal):** Las operaciones tipo `Cabal` no exigen documento firmado.
 
 ### Reglas de Bloqueo Comercial en Pedidos de Venta (`sale.order`):
 - **Regla 1 (Protestos):** Si `partner_id.commercial_blocked == True`, el sistema impide la confirmación de la orden.
 - **Regla 2 (Exceso de Crédito):** Si el cliente pertenece a un Grupo Empresarial y `credit_available < order.amount_total`, el sistema impide la confirmación de la orden indicando el saldo disponible real.
+
+### Recordatorios Automáticos de Vencimiento:
+El sistema ejecuta diariamente una acción programada (**Letras: recordatorio de vencimiento**) que crea una **actividad** para las letras `En Banco` que vencen en los próximos 7 días, reemplazando el aviso manual por WhatsApp. Puedes consultarlas en el icono de **Actividades** ⏰ del menú superior.
 
 ---
 
