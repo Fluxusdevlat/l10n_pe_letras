@@ -2,7 +2,7 @@ import base64
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError
-from datetime import date, timedelta
+from datetime import date
 
 
 class Letra(models.Model):
@@ -79,11 +79,6 @@ class Letra(models.Model):
                                    string='Protestos')
     protesto_count = fields.Integer(string='Cant. Protestos',
                                     compute='_compute_protesto_count')
-    protest_date = fields.Date(string='Fecha de Protesto', readonly=True,
-                               tracking=True)
-    debit_note_id = fields.Many2one('account.move',
-                                    string='Nota de Débito (Gastos)',
-                                    readonly=True, copy=False)
 
     renovacion_origin_id = fields.Many2one('l10n.pe.letra',
                                            string='Letra Origen (Renovación)',
@@ -92,84 +87,28 @@ class Letra(models.Model):
                                              'renovacion_origin_id',
                                              string='Letras Destino (Renovación)')
     is_renovacion = fields.Boolean(string='Es Renovación', default=False)
-    signed_document = fields.Binary(string='Documento Firmado (PDF / Imagen)',
+
+    signed_document = fields.Binary(string='Documento Firmado (PDF)',
                                     attachment=True, copy=False)
     signed_filename = fields.Char(string='Nombre Archivo Firmado', copy=False)
-    can_sign = fields.Boolean(string='Puede Firmar', compute='_compute_can_sign')
+    can_sign = fields.Boolean(string='Puede Firmar',
+                              compute='_compute_can_sign')
 
     notes = fields.Text(string='Observaciones')
 
-    @api.depends('state', 'instrument_type', 'signed_document')
-    def _compute_can_sign(self):
-        for r in self:
-            if r.instrument_type == 'cabal':
-                r.can_sign = True
-            else:
-                r.can_sign = bool(r.signed_document)
-
-    _sql_constraints = [
-        ('name_unique', 'unique(name, company_id)',
-         'El número de letra debe ser único por compañía'),
-    ]
+    _name_unique = models.Constraint(
+        'UNIQUE(name, company_id)',
+        'El número de letra debe ser único por compañía')
 
     @api.onchange('partner_id')
     def _onchange_partner_id_days_term(self):
-        if self.partner_id:
-            if self.partner_id.letra_days_term:
-                self.days_term = self.partner_id.letra_days_term
-            if self.partner_id.is_cabal_client:
-                self.instrument_type = 'cabal'
+        if self.partner_id and self.partner_id.letra_days_term:
+            self.days_term = self.partner_id.letra_days_term
 
     @api.onchange('line_ids')
     def _onchange_line_ids_amount_total(self):
         if self.line_ids:
             self.amount_total = sum(self.line_ids.mapped('amount'))
-
-    @api.constrains('line_ids', 'partner_id')
-    def _check_invoices_same_partner(self):
-        for letra in self:
-            for line in letra.line_ids:
-                if not letra.partner_id:
-                    continue
-                if line.move_id.partner_id.commercial_partner_id != \
-                        letra.partner_id.commercial_partner_id:
-                    raise ValidationError(_(
-                        'Todas las facturas asociadas deben pertenecer al '
-                        'mismo cliente de la letra.'))
-
-    @api.constrains('line_ids')
-    def _check_invoices_open(self):
-        for letra in self:
-            for line in letra.line_ids:
-                move = line.move_id
-                if move.move_type not in ('out_invoice', 'out_refund'):
-                    raise ValidationError(_(
-                        'Solo se pueden asociar facturas de cliente a una letra.'))
-                if move.state != 'posted':
-                    raise ValidationError(_(
-                        'La factura %s no está publicada.') % move.name)
-                if move.payment_state in ('paid', 'reversed'):
-                    raise ValidationError(_(
-                        'La factura %s ya está pagada y no puede incluirse '
-                        'en una letra.') % move.name)
-
-    @api.constrains('signed_document', 'signed_filename')
-    def _check_signed_document_pdf(self):
-        for letra in self:
-            if not letra.signed_document:
-                continue
-            filename = (letra.signed_filename or '').lower()
-            if filename and not filename.endswith('.pdf'):
-                raise ValidationError(_(
-                    'Solo se permite subir la letra firmada en formato PDF.'))
-            try:
-                content = base64.b64decode(letra.signed_document)
-            except Exception:
-                raise ValidationError(_(
-                    'El archivo cargado no es un PDF válido.'))
-            if not content.startswith(b'%PDF'):
-                raise ValidationError(_(
-                    'Solo se permite subir la letra firmada en formato PDF.'))
 
     def action_open_generate_wizard(self):
         self.ensure_one()
@@ -189,6 +128,7 @@ class Letra(models.Model):
 
     @api.depends('date_emission', 'days_term')
     def _compute_date_due(self):
+        from datetime import timedelta
         for r in self:
             if r.date_emission and r.days_term:
                 try:
@@ -199,6 +139,7 @@ class Letra(models.Model):
             if not r.date_due:
                 r.date_due = fields.Date.today()
 
+
     @api.depends('amount_total', 'amount_paid')
     def _compute_amount_residual(self):
         for r in self:
@@ -207,6 +148,32 @@ class Letra(models.Model):
     def _compute_protesto_count(self):
         for r in self:
             r.protesto_count = len(r.protesto_ids)
+
+    @api.depends('instrument_type', 'signed_document')
+    def _compute_can_sign(self):
+        for r in self:
+            if r.instrument_type == 'cabal':
+                r.can_sign = True
+            else:
+                r.can_sign = bool(r.signed_document)
+
+    @api.constrains('signed_document', 'signed_filename')
+    def _check_signed_document_pdf(self):
+        for letra in self:
+            if not letra.signed_document:
+                continue
+            filename = (letra.signed_filename or '').lower()
+            if filename and not filename.endswith('.pdf'):
+                raise ValidationError(_(
+                    'Solo se permite subir la letra firmada en formato PDF.'))
+            try:
+                content = base64.b64decode(letra.signed_document)
+            except Exception:
+                raise ValidationError(_(
+                    'El archivo cargado no es un PDF válido.'))
+            if not content.startswith(b'%PDF'):
+                raise ValidationError(_(
+                    'Solo se permite subir la letra firmada en formato PDF.'))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -218,42 +185,27 @@ class Letra(models.Model):
     def action_sent(self):
         self.state = 'sent'
 
-    def action_signed_warning(self):
-        raise UserError(_(
-            'Para poder registrar la firma, primero debe cargar la letra firmada '
-            'en el campo "Cargar Letra Firmada (PDF / Foto)".'
-        ))
-
     def action_signed(self):
         for r in self:
             if r.instrument_type == 'letra' and not r.signed_document:
                 raise UserError(_(
-                    'Debe cargar la imagen o PDF de la letra firmada en el campo "Documento Firmado" '
-                    'antes de poder registrar la firma.'
+                    'Debe cargar el documento firmado (PDF) en el campo '
+                    '"Cargar Letra Firmada (PDF)" antes de registrar la firma.'
                 ))
             r.state = 'signed'
 
     def action_send_to_bank(self):
         for r in self:
             if r.instrument_type == 'letra' and not r.signed_document:
-                attachments = self.env['ir.attachment'].search_count([
-                    ('res_model', '=', 'l10n.pe.letra'),
-                    ('res_id', '=', r.id)
-                ])
-                if not attachments and not r.message_main_attachment_id:
-                    raise UserError(_(
-                        'No se puede enviar la letra al banco sin cargar el documento '
-                        'firmado en el campo "Documento Firmado" (o en el chatter).'
-                    ))
+                raise UserError(_(
+                    'No se puede enviar la letra a banco sin cargar el '
+                    'documento firmado (PDF) del cliente.'
+                ))
             r.state = 'in_bank'
 
     def action_paid(self):
-        for r in self:
-            r.write({
-                'state': 'paid',
-                'date_payment': fields.Date.today(),
-                'amount_paid': r.amount_total,
-            })
+        self.state = 'paid'
+        self.date_payment = fields.Date.today()
 
     def action_cancel(self):
         self.state = 'cancelled'
@@ -293,36 +245,6 @@ class Letra(models.Model):
         self.ensure_one()
         return self.env.ref('l10n_pe_letras.action_report_letra').report_action(self)
 
-    @api.model
-    def _cron_notify_due_letras(self):
-        today = fields.Date.today()
-        target = today + timedelta(days=7)
-        activity_type = self.env.ref('mail.mail_activity_data_todo',
-                                     raise_if_not_found=False)
-        if not activity_type:
-            return
-        letras = self.search([
-            ('state', '=', 'in_bank'),
-            ('date_due', '>=', today),
-            ('date_due', '<=', target),
-        ])
-        for letra in letras:
-            existing = self.env['mail.activity'].search_count([
-                ('res_model', '=', 'l10n.pe.letra'),
-                ('res_id', '=', letra.id),
-                ('activity_type_id', '=', activity_type.id),
-            ])
-            if existing:
-                continue
-            letra.activity_schedule(
-                'mail.mail_activity_data_todo',
-                date_deadline=letra.date_due,
-                summary=_('Letra %s próxima a vencer') % letra.name,
-                note=_('Contactar al cliente %s por la letra %s que vence '
-                       'el %s.') % (letra.partner_id.name, letra.name,
-                                    letra.date_due),
-            )
-
     def name_get(self):
         res = []
         for r in self:
@@ -356,7 +278,6 @@ class LetraLine(models.Model):
         if self.move_id and not self.amount:
             self.amount = self.move_id.amount_residual
 
-    _sql_constraints = [
-        ('check_amount_positive', 'CHECK(amount > 0)',
-         'El monto aplicado debe ser mayor a cero'),
-    ]
+    _check_amount_positive = models.Constraint(
+        'CHECK(amount > 0)',
+        'El monto aplicado debe ser mayor a cero')

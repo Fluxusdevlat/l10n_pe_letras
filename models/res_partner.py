@@ -14,11 +14,6 @@ class ResPartner(models.Model):
         ('150', '150 Días (Anticipo)'),
     ], string='Plazo de Crédito (Letras)', default='30')
 
-    is_cabal_client = fields.Boolean(
-        string='Cliente Cabal',
-        help='Marque si el cliente opera bajo la modalidad Cabal (canje de '
-             'factura al 100% en el banco, sin letra ni firma física).')
-
     letra_ids = fields.One2many('l10n.pe.letra', 'partner_id',
                                 string='Letras')
     letra_count = fields.Integer(string='Cant. Letras',
@@ -34,10 +29,12 @@ class ResPartner(models.Model):
 
     commercial_blocked = fields.Boolean(
         string='Bloqueado Comercialmente',
-        compute='_compute_commercial_blocked')
+        compute='_compute_commercial_blocked',
+        store=True)
     commercial_block_reason = fields.Char(
         string='Motivo de Bloqueo',
-        compute='_compute_commercial_blocked')
+        compute='_compute_commercial_blocked',
+        store=True)
 
     def _compute_letra_count(self):
         for r in self:
@@ -58,9 +55,7 @@ class ResPartner(models.Model):
             r.letra_protestada_count = len(pendientes)
             r.has_letras_protestadas = bool(pendientes)
 
-    @api.depends('letra_ids', 'letra_ids.state', 'letra_ids.protesto_ids',
-                 'letra_ids.protesto_ids.state', 'credit_group_id',
-                 'credit_group_id.partner_ids')
+    @api.depends('has_letras_protestadas', 'credit_group_id')
     def _compute_commercial_blocked(self):
         for r in self:
             blocked = False

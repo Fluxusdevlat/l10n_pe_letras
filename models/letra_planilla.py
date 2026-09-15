@@ -15,7 +15,7 @@ class LetraPlanilla(models.Model):
         ('draft', 'Borrador'),
         ('sent', 'Enviada al Banco'),
         ('confirmed', 'Confirmada'),
-    ], string='Estado', default='draft', tracking=True)
+    ], string='Estado', default='draft')
 
     letra_ids = fields.One2many('l10n.pe.letra', 'planilla_id',
                                 string='Letras', domain=[('state', '!=', 'cancelled')])

@@ -36,4 +36,10 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
+
+    <menuitem id="menu_enviar_letras_email"
+              name="Enviar Letras por Email"
+              parent="l10n_pe_letras.menu_letras_operations"
+              action="action_enviar_letras_wizard"
+              sequence="15"/>
 </odoo>

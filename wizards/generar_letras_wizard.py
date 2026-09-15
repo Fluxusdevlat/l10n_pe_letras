@@ -30,11 +30,6 @@ class GenerateLetrasWizard(models.TransientModel):
                 ])
                 if invoices:
                     res['invoice_ids'] = [(6, 0, invoices.ids)]
-        if 'instrument_type' in fields_list and res.get('invoice_ids'):
-            partners = self.env['account.move'].browse(
-                res['invoice_ids'][0][2]).mapped('partner_id')
-            if partners and partners[0].is_cabal_client:
-                res['instrument_type'] = 'cabal'
         return res
 
     invoice_ids = fields.Many2many('account.move', string='Facturas',
@@ -55,11 +50,6 @@ class GenerateLetrasWizard(models.TransientModel):
     amount_total = fields.Monetary(string='Importe Total',
                                    currency_field='currency_id',
                                    compute='_compute_amount_total')
-
-    instrument_type = fields.Selection([
-        ('letra', 'Letra de Cambio'),
-        ('cabal', 'Cabal'),
-    ], string='Tipo de Instrumento', default='letra', required=True)
 
     generate_option = fields.Selection([
         ('one_per_invoice', 'Una Letra por Factura'),
@@ -89,8 +79,6 @@ class GenerateLetrasWizard(models.TransientModel):
                     'message': 'Las facturas seleccionadas pertenecen a diferentes clientes. '
                                'Se usará la opción "Una Letra por Factura".',
                 }}
-            if partners.is_cabal_client:
-                self.instrument_type = 'cabal'
         if self.date_emission and not self.date_due:
             partners = self.invoice_ids.mapped('partner_id') if self.invoice_ids else False
             days = 30
@@ -198,7 +186,6 @@ class GenerateLetrasWizard(models.TransientModel):
                     'days_term': term_str,
                     'date_due': line.date_due,
                     'tipo': 'emission',
-                    'instrument_type': self.instrument_type,
                     'notes': line.name,
                 })
                 LetraLine.create({
@@ -227,7 +214,6 @@ class GenerateLetrasWizard(models.TransientModel):
                     'days_term': term_str,
                     'date_due': due_date,
                     'tipo': 'emission',
-                    'instrument_type': self.instrument_type,
                     'notes': _('Cuota %s de %s - Factura %s') % (i, num, inv.name),
                 })
                 LetraLine.create({
@@ -262,7 +248,6 @@ class GenerateLetrasWizard(models.TransientModel):
             'date_emission': self.date_emission,
             'date_due': due_date,
             'tipo': 'emission',
-            'instrument_type': self.instrument_type,
         })
 
         for inv in invoices:
@@ -296,7 +281,6 @@ class GenerateLetrasWizard(models.TransientModel):
                     'date_emission': self.date_emission,
                     'date_due': due_date,
                     'tipo': 'emission',
-                    'instrument_type': self.instrument_type,
                 })
                 LetraLine.create({
                     'letra_id': letra.id,
@@ -318,7 +302,6 @@ class GenerateLetrasWizard(models.TransientModel):
                     'date_emission': self.date_emission,
                     'date_due': due_date,
                     'tipo': 'emission',
-                    'instrument_type': self.instrument_type,
                 })
                 LetraLine.create({
                     'letra_id': letra.id,

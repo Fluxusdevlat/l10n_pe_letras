@@ -43,11 +43,6 @@
                         <field name="invoiced_amount" widget="monetary"/>
                         <field name="pending_orders_amount" widget="monetary"/>
                     </group>
-                    <group string="Aprobación de Excepción (Techo Global)">
-                        <field name="exception_approved"/>
-                        <field name="exception_approved_by"
-                               invisible="not exception_approved"/>
-                    </group>
                     <notebook>
                         <page string="Empresas del Grupo">
                             <field name="partner_ids">

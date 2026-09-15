@@ -12,7 +12,6 @@
                         <group>
                             <field name="credit_group_id"/>
                             <field name="letra_days_term"/>
-                            <field name="is_cabal_client"/>
                             <field name="commercial_blocked"/>
                             <field name="commercial_block_reason" readonly="1"/>
                         </group>

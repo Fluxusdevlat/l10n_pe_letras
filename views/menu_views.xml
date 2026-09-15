@@ -36,12 +36,6 @@
               action="action_generate_letras_from_invoices"
               sequence="30"/>
 
-    <menuitem id="menu_letras_enviar_email"
-              name="Enviar Letras por Email"
-              parent="menu_letras_operations"
-              action="action_enviar_letras_wizard"
-              sequence="40"/>
-
     <!-- Submenú de Seguimiento -->
     <menuitem id="menu_letras_tracking"
               name="Seguimiento"

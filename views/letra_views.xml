@@ -4,9 +4,9 @@
         <field name="name">l10n.pe.letra.tree</field>
         <field name="model">l10n.pe.letra</field>
         <field name="arch" type="xml">
-            <list string="Letras de Cambio" create_text="Nueva Letra" default_order="date_emission desc">
+            <list string="Letras de Cambio" default_order="date_emission desc">
                 <header>
-                    <button name="%(action_generate_letras_from_invoices)d" string="Más opciones de letras" type="action" class="btn-secondary"/>
+                    <button name="%(action_generate_letras_from_invoices)d" string="Generar Letras desde Facturas" type="action" class="btn-primary"/>
                 </header>
                 <field name="name"/>
                 <field name="partner_id"/>
@@ -27,15 +27,13 @@
             </list>
         </field>
     </record>
+
     <record id="view_letra_form" model="ir.ui.view">
         <field name="name">l10n.pe.letra.form</field>
         <field name="model">l10n.pe.letra</field>
         <field name="arch" type="xml">
             <form string="Letra de Cambio">
                 <header>
-                    <button name="%(action_generate_letras_from_invoices)d" string="Más opciones de letras"
-                            type="action" invisible="state != 'draft'"
-                            class="btn-secondary"/>
                     <button name="action_sent" string="Enviar al Cliente"
                             type="object" invisible="state != 'draft'"
                             class="btn-primary"/>
@@ -79,7 +77,7 @@
                         </button>
                     </div>
                     <group>
-                        <group string="Datos Principales">
+                        <group>
                             <field name="name"/>
                             <field name="partner_id" options="{'no_create': True}"/>
                             <field name="salesperson_id" readonly="1"/>
@@ -87,21 +85,17 @@
                             <field name="tipo"/>
                             <field name="bank_id" options="{'no_create': True}"/>
                             <field name="planilla_id" readonly="1"/>
-                            <field name="signed_document" filename="signed_filename" widget="binary"
-                                   string="Cargar Letra Firmada (PDF)"
+                            <field name="signed_document" filename="signed_filename"
+                                   widget="binary" string="Cargar Letra Firmada (PDF)"
                                    invisible="instrument_type == 'cabal'"/>
                         </group>
-                        <group string="Vencimiento y Banco">
+                        <group>
                             <field name="date_emission"/>
                             <field name="days_term"/>
                             <field name="date_due"/>
                             <field name="unique_number"/>
                             <field name="internal_bank_number"/>
                             <field name="date_payment" readonly="1"/>
-                            <field name="protest_date" readonly="1"
-                                   invisible="not protest_date"/>
-                            <field name="debit_note_id" readonly="1"
-                                   invisible="not debit_note_id"/>
                             <field name="currency_id" groups="base.group_multi_currency"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
@@ -118,19 +112,13 @@
                     <div class="alert alert-info" role="alert"
                          invisible="state != 'sent' or can_sign or instrument_type == 'cabal'">
                         Cargue la letra firmada y sellada en formato <strong>PDF</strong> en el campo
-                        <strong>Cargar Letra Firmada (PDF)</strong> para habilitar
-                        el botón <strong>Registrar Firma</strong>.
+                        <strong>Cargar Letra Firmada (PDF)</strong> para habilitar el botón
+                        <strong>Registrar Firma</strong>.
                     </div>
                     <div class="alert alert-success" role="alert"
                          invisible="state != 'sent' or not can_sign or instrument_type == 'cabal'">
                         Documento firmado cargado. Ya puede presionar
                         <strong>Registrar Firma</strong>.
-                    </div>
-                    <div class="alert alert-info" role="alert"
-                         invisible="state != 'sent' or instrument_type != 'cabal'">
-                        Operación <strong>Cabal</strong>: no requiere documento firmado.
-                        Puede enviar la factura al banco directamente con
-                        <strong>Enviar al Banco</strong>.
                     </div>
                     <notebook>
                         <page string="Facturas Asociadas">
@@ -155,13 +143,13 @@
                             <field name="renovacion_origin_id"/>
                         </page>
                         <page string="Observaciones">
-                            <group string="Notas Internas">
-                                <field name="notes" placeholder="Agregue observaciones o comentarios adicionales..."/>
-                            </group>
+                            <field name="notes"/>
                         </page>
                     </notebook>
                 </sheet>
                 <chatter/>
+
+
             </form>
         </field>
     </record>

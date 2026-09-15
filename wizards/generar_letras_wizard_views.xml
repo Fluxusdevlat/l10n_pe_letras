@@ -15,7 +15,6 @@
                         </group>
                         <group string="Datos de Emisión">
                             <field name="partner_id" readonly="1"/>
-                            <field name="instrument_type"/>
                             <field name="bank_id" options="{'no_create': True}"/>
                             <field name="date_emission"/>
                             <field name="date_due" string="Fecha Vencimiento (1ra Cuota / General)"/>
@@ -45,7 +44,7 @@
     </record>
 
     <record id="action_generate_letras_from_invoices" model="ir.actions.act_window">
-        <field name="name">Más opciones de letras</field>
+        <field name="name">Generar Letras desde Facturas</field>
         <field name="res_model">l10n.pe.letra.generate.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
