@@ -8,6 +8,7 @@
             <xpath expr="//div[@id='about']" position="before">
                 <div class="app_settings_block" data-string="Letras de Cambio" string="Letras de Cambio" groups="account.group_account_manager">
                     <h2>Letras de Cambio</h2>
+                    <field name="letras_currency_id" invisible="1"/>
                     <div class="row mt16">
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane"/>
@@ -17,6 +18,16 @@
                                     Correo destino para el wizard "Enviar Letras por Email"
                                 </div>
                                 <field name="letras_email_to" placeholder="correo@ejemplo.com" class="o_extra_small"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="letras_global_credit_limit" string="Techo agregado de líneas de crédito"/>
+                                <div class="text-muted">
+                                    Monto máximo de la suma de líneas de crédito de los grupos empresariales (0 = sin límite)
+                                </div>
+                                <field name="letras_global_credit_limit" widget="monetary" class="o_extra_small"/>
                             </div>
                         </div>
                     </div>

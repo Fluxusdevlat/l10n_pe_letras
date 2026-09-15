@@ -16,7 +16,13 @@
               name="Letras de Cambio"
               parent="menu_letras_operations"
               action="action_letra"
-              sequence="10"/>
+              sequence="1"/>
+
+    <menuitem id="menu_letras_cabal"
+              name="Operaciones Cabal"
+              parent="menu_letras_operations"
+              action="action_letra_cabal"
+              sequence="15"/>
 
     <menuitem id="menu_letras_planillas"
               name="Planillas"
@@ -24,11 +30,29 @@
               action="action_letra_planilla"
               sequence="20"/>
 
+    <menuitem id="menu_letras_generate_wizard"
+              name="Generar Letras desde Facturas"
+              parent="menu_letras_operations"
+              action="action_generate_letras_from_invoices"
+              sequence="30"/>
+
+    <menuitem id="menu_letras_enviar_email"
+              name="Enviar Letras por Email"
+              parent="menu_letras_operations"
+              action="action_enviar_letras_wizard"
+              sequence="40"/>
+
     <!-- Submenú de Seguimiento -->
     <menuitem id="menu_letras_tracking"
               name="Seguimiento"
               parent="menu_letras_root"
               sequence="20"/>
+
+    <menuitem id="menu_letras_proyeccion"
+              name="Proyección Semanal"
+              parent="menu_letras_tracking"
+              action="action_proyeccion_cobranza"
+              sequence="5"/>
 
     <menuitem id="menu_letras_protestos"
               name="Protestos"
@@ -42,7 +66,27 @@
               action="action_letra_renovacion"
               sequence="20"/>
 
+    <!-- Submenú de Reportes -->
+    <menuitem id="menu_letras_reports"
+              name="Reportes"
+              parent="menu_letras_root"
+              sequence="30"/>
+
+    <menuitem id="menu_letras_report_proyeccion"
+              name="Proyección Semanal (Pivot)"
+              parent="menu_letras_reports"
+              action="action_proyeccion_cobranza"
+              sequence="10"/>
+
+    <menuitem id="menu_letras_report_excel"
+              name="Exportar Resumen Excel / Email"
+              parent="menu_letras_reports"
+              action="action_enviar_letras_wizard"
+              sequence="20"/>
+
+
     <!-- Configuración -->
+
     <menuitem id="menu_letras_config"
               name="Configuración"
               parent="menu_letras_root"
@@ -61,3 +105,4 @@
               sequence="50"
               action="action_letra"/>
 </odoo>
+

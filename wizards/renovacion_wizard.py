@@ -14,9 +14,20 @@ class LetraRenovacionWizard(models.TransientModel):
     date_emission = fields.Date(string='Fecha de Emisión',
                                 default=fields.Date.context_today,
                                 required=True)
-    date_due = fields.Date(string='Nueva Fecha de Vencimiento',
-                           required=True)
+    days_term = fields.Selection([('30', '30 Días (Obligatorio Banco)')],
+                                 string='Plazo Renovación', default='30',
+                                 readonly=True, required=True)
+    date_due = fields.Date(string='Nueva Fecha de Vencimiento (30 días)',
+                           compute='_compute_date_due', store=True, readonly=False)
     bank_id = fields.Many2one('res.bank', string='Banco')
+
+    @api.depends('date_emission', 'days_term')
+    def _compute_date_due(self):
+        from datetime import timedelta
+        for r in self:
+            if r.date_emission:
+                r.date_due = r.date_emission + timedelta(days=30)
+
 
     amount_origin = fields.Monetary(string='Monto Original',
                                     related='letra_origin_id.amount_residual')

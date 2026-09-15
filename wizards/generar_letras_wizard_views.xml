@@ -5,18 +5,34 @@
         <field name="model">l10n.pe.letra.generate.wizard</field>
         <field name="arch" type="xml">
             <form string="Generar Letras desde Facturas">
-                <group>
+                <sheet>
                     <group>
-                        <field name="generate_option" widget="radio"/>
-                        <field name="invoice_ids" widget="many2many_tags"/>
+                        <group string="Configuración de Generación">
+                            <field name="generate_option" widget="radio"/>
+                            <field name="invoice_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="num_letras" invisible="generate_option != 'multiple_letras'"/>
+                            <field name="days_interval" invisible="generate_option != 'multiple_letras'"/>
+                        </group>
+                        <group string="Datos de Emisión">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="bank_id" options="{'no_create': True}"/>
+                            <field name="date_emission"/>
+                            <field name="date_due" string="Fecha Vencimiento (1ra Cuota / General)"/>
+                            <field name="amount_total" widget="monetary"/>
+                        </group>
                     </group>
-                    <group>
-                        <field name="bank_id"/>
-                        <field name="date_emission"/>
-                        <field name="date_due"/>
-                        <field name="amount_total" widget="monetary"/>
-                    </group>
-                </group>
+
+                    <separator string="Cronograma de Letras a Generar (Vista Previa)"/>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="sequence"/>
+                            <field name="name"/>
+                            <field name="date_due"/>
+                            <field name="amount" widget="monetary" sum="Total Cronograma"/>
+                        </list>
+                    </field>
+                </sheet>
+
                 <footer>
                     <button name="action_generate" string="Generar Letra(s)"
                             type="object" class="btn-primary"/>
@@ -28,11 +44,11 @@
     </record>
 
     <record id="action_generate_letras_from_invoices" model="ir.actions.act_window">
-        <field name="name">Generar Letras</field>
+        <field name="name">Más opciones de letras</field>
         <field name="res_model">l10n.pe.letra.generate.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,form</field>
     </record>
 </odoo>

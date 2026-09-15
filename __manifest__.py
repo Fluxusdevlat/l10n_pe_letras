@@ -1,6 +1,7 @@
 {
     'name': 'Letras de Cambio - Perú',
-    'version': '1.0',
+    'version': '19.0.1.22.0',
+
     'summary': 'Gestión de Letras de Cambio para empresas peruanas',
     'description': """
 Módulo para la gestión completa de Letras de Cambio:
@@ -28,19 +29,20 @@ Módulo para la gestión completa de Letras de Cambio:
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/letra_sequence.xml',
+        'data/letras_cron.xml',
         'views/letra_protesto_views.xml',
         'views/letra_renovacion_views.xml',
         'views/letra_planilla_views.xml',
+        'wizards/generar_letras_wizard_views.xml',
+        'wizards/renovacion_wizard_views.xml',
+        'wizards/enviar_letras_wizard_views.xml',
         'views/letra_views.xml',
         'views/credit_group_views.xml',
         'views/res_partner_views.xml',
         'views/account_move_views.xml',
         'views/sale_order_views.xml',
-        'views/menu_views.xml',
-        'wizards/generar_letras_wizard_views.xml',
-        'wizards/renovacion_wizard_views.xml',
-        'wizards/enviar_letras_wizard_views.xml',
         'views/res_config_settings_views.xml',
+        'views/menu_views.xml',
         'reports/letra_templates.xml',
     ],
     'demo': [],

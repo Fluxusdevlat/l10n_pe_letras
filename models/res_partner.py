@@ -6,6 +6,13 @@ class ResPartner(models.Model):
 
     credit_group_id = fields.Many2one('l10n.pe.credit.group',
                                       string='Grupo Empresarial')
+    letra_days_term = fields.Selection([
+        ('30', '30 Días'),
+        ('60', '60 Días'),
+        ('90', '90 Días'),
+        ('120', '120 Días'),
+        ('150', '150 Días (Anticipo)'),
+    ], string='Plazo de Crédito (Letras)', default='30')
 
     letra_ids = fields.One2many('l10n.pe.letra', 'partner_id',
                                 string='Letras')
@@ -22,12 +29,10 @@ class ResPartner(models.Model):
 
     commercial_blocked = fields.Boolean(
         string='Bloqueado Comercialmente',
-        compute='_compute_commercial_blocked',
-        store=True)
+        compute='_compute_commercial_blocked')
     commercial_block_reason = fields.Char(
         string='Motivo de Bloqueo',
-        compute='_compute_commercial_blocked',
-        store=True)
+        compute='_compute_commercial_blocked')
 
     def _compute_letra_count(self):
         for r in self:
@@ -48,7 +53,9 @@ class ResPartner(models.Model):
             r.letra_protestada_count = len(pendientes)
             r.has_letras_protestadas = bool(pendientes)
 
-    @api.depends('has_letras_protestadas', 'credit_group_id')
+    @api.depends('letra_ids', 'letra_ids.state', 'letra_ids.protesto_ids',
+                 'letra_ids.protesto_ids.state', 'credit_group_id',
+                 'credit_group_id.partner_ids')
     def _compute_commercial_blocked(self):
         for r in self:
             blocked = False

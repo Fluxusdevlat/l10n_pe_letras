@@ -38,6 +38,8 @@ class LetraProtesto(models.Model):
         ('other', 'Otro'),
     ], string='Tipo de Regularización')
 
+    debit_note_id = fields.Many2one('account.move', string='Nota de Débito (Gastos)',
+                                  readonly=True)
     notes = fields.Text(string='Observaciones')
 
     @api.depends('amount', 'gastos')
@@ -51,10 +53,42 @@ class LetraProtesto(models.Model):
             if vals.get('name', _('New')) == _('New'):
                 vals['name'] = self.env['ir.sequence'].next_by_code(
                     'l10n.pe.letra.protesto') or _('New')
-            letra = self.env['l10n.pe.letra'].browse(vals.get('letra_id'))
-            letra.state = 'protested'
-        return super().create(vals_list)
+        records = super().create(vals_list)
+        for record in records:
+            if record.letra_id:
+                record.letra_id.write({
+                    'state': 'protested',
+                    'protest_date': record.date_protest,
+                })
+                record._create_debit_note()
+        return records
+
+    def _create_debit_note(self):
+        for r in self:
+            if r.gastos <= 0 or r.debit_note_id:
+                continue
+            company = r.letra_id.company_id or r.company_id or self.env.company
+            journal = self.env['account.journal'].search(
+                [('type', '=', 'sale'), ('company_id', '=', company.id)], limit=1)
+            move_vals = {
+                'move_type': 'out_invoice',
+                'partner_id': r.partner_id.id,
+                'invoice_date': r.date_protest or fields.Date.today(),
+                'ref': _('Gastos de Protesto - Letra %s') % r.letra_id.name,
+                'invoice_line_ids': [(0, 0, {
+                    'name': _('Gastos y Costas de Protesto Bancario - Letra %s') % r.letra_id.name,
+                    'quantity': 1,
+                    'price_unit': r.gastos,
+                })],
+            }
+            if journal:
+                move_vals['journal_id'] = journal.id
+            debit_note = self.env['account.move'].sudo().create(move_vals)
+            r.debit_note_id = debit_note.id
+            r.letra_id.debit_note_id = debit_note.id
+
 
     def action_resolve(self):
         self.state = 'resolved'
         self.resolution_date = fields.Date.today()
+

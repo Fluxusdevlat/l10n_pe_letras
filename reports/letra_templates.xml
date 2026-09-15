@@ -21,6 +21,17 @@
         <field name="binding_model_id" ref="model_l10n_pe_letra_planilla"/>
     </record>
 
+    <record id="action_report_estado_cuenta_partner" model="ir.actions.report">
+        <field name="name">Estado de Cuenta de Letras</field>
+        <field name="model">res.partner</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_pe_letras.report_estado_cuenta_partner</field>
+        <field name="report_file">l10n_pe_letras.report_estado_cuenta_partner</field>
+        <field name="print_report_name">'Estado_Cuenta_Letras_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+    </record>
+
+
     <!-- Template: Letra individual -->
     <template id="report_letra">
         <t t-name="l10n_pe_letras.report_letra">
@@ -187,4 +198,80 @@
             </main>
         </t>
     </template>
+
+    <!-- Template: Estado de Cuenta por Cliente / Grupo Empresarial -->
+    <template id="report_estado_cuenta_partner">
+        <t t-name="l10n_pe_letras.report_estado_cuenta_partner">
+            <main>
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                    <div class="estado-cuenta-container">
+                        <div class="header-title" style="text-align: center; margin-bottom: 20px;">
+                            <h2>ESTADO DE CUENTA Y CARTERA DE LETRAS</h2>
+                            <h4><span t-esc="doc.name"/> (RUC/DNI: <span t-esc="doc.vat or 'S/N'"/>)</h4>
+                            <p t-if="doc.credit_group_id"><strong>Grupo Empresarial:</strong> <span t-esc="doc.credit_group_id.name"/></p>
+                        </div>
+
+                        <div style="border: 1px solid #ccc; padding: 12px; margin-bottom: 20px; background-color: #f9f9f9;">
+                            <div style="float: left; width: 33%;">
+                                <strong>Línea de Crédito:</strong><br/>
+                                S/ <span t-esc="'{:,.2f}'.format(doc.credit_group_id.credit_limit if doc.credit_group_id else 0.0)"/>
+                            </div>
+                            <div style="float: left; width: 33%;">
+                                <strong>Crédito Utilizado:</strong><br/>
+                                S/ <span t-esc="'{:,.2f}'.format(doc.credit_group_id.credit_used if doc.credit_group_id else 0.0)"/>
+                            </div>
+                            <div style="float: right; width: 33%; text-align: right;">
+                                <strong>Crédito Disponible:</strong><br/>
+                                S/ <span t-esc="'{:,.2f}'.format(doc.credit_group_id.credit_available if doc.credit_group_id else 0.0)"/>
+                            </div>
+                            <div style="clear: both;"/>
+                        </div>
+
+                        <t t-if="doc.commercial_blocked">
+                            <div style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                                <strong>⚠️ CLIENTE BLOQUEADO COMERCIALMENTE:</strong> <span t-esc="doc.commercial_block_reason"/>
+                            </div>
+                        </t>
+
+                        <h4>Detalle de Letras de Cambio Activas</h4>
+                        <table class="table table-bordered table-sm" style="margin-top: 10px; width: 100%;">
+                            <thead>
+                                <tr style="background-color: #2C3E50; color: white;">
+                                    <th>N° Letra</th>
+                                    <th>Emisión</th>
+                                    <th>Vencimiento</th>
+                                    <th>Banco</th>
+                                    <th>N° Único</th>
+                                    <th>Estado</th>
+                                    <th class="text-right">Importe Total</th>
+                                    <th class="text-right">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.letra_ids.filtered(lambda l: l.state not in ('cancelled', 'paid'))" t-as="letra">
+                                    <tr>
+                                        <td><span t-esc="letra.name"/></td>
+                                        <td><span t-esc="letra.date_emission"/></td>
+                                        <td><span t-esc="letra.date_due"/></td>
+                                        <td><span t-esc="letra.bank_id.name or '-'"/></td>
+                                        <td><span t-esc="letra.unique_number or '-'"/></td>
+                                        <td><span t-esc="letra.state"/></td>
+                                        <td class="text-right">S/ <span t-esc="'{:,.2f}'.format(letra.amount_total)"/></td>
+                                        <td class="text-right">S/ <span t-esc="'{:,.2f}'.format(letra.amount_residual)"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 30px; text-align: right; color: #666; font-size: 11px;">
+                            <p>Reporte generado el <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/></p>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            </main>
+        </t>
+    </template>
 </odoo>
+

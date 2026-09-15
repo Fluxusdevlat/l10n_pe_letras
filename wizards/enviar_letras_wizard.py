@@ -91,7 +91,7 @@ class EnviarLetrasWizard(models.TransientModel):
                 'datas': base64.b64encode(excel_data),
                 'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             })
-            attachment_ids.append((4, excel_attachment.id))
+            attachment_ids.append(excel_attachment.id)
 
         # 2. Generar PDF por cada letra si aplica
         if self.include_report:
@@ -104,7 +104,7 @@ class EnviarLetrasWizard(models.TransientModel):
                     'datas': base64.b64encode(pdf),
                     'mimetype': 'application/pdf',
                 })
-                attachment_ids.append((4, pdf_attachment.id))
+                attachment_ids.append(pdf_attachment.id)
 
         # 3. Cuerpo del correo
         lines = []
@@ -139,19 +139,23 @@ class EnviarLetrasWizard(models.TransientModel):
             '<br/>'.join(lines) if lines else '<em>Sin letras</em>',
         )
 
-        # 4. Enviar
-        MailMessage = self.env['mail.message'].sudo()
-        MailMessage.create({
-            'model': 'l10n.pe.letra',
-            'res_id': letras[0].id,
-            'subject': _('Letras de Cambio - %s al %s (%s letras)') % (
-                self.date_from, self.date_to, len(letras)),
-            'body': body,
+        # 4. Enviar correo real vía mail.mail
+        subject = _('Letras de Cambio - %s al %s (%s letras)') % (
+            self.date_from, self.date_to, len(letras))
+        mail = self.env['mail.mail'].sudo().create({
+            'subject': subject,
             'email_to': self.email_to,
-            'attachment_ids': attachment_ids,
-            'message_type': 'email',
+            'body_html': body,
             'author_id': self.env.user.partner_id.id,
+            'attachment_ids': [(6, 0, attachment_ids)],
         })
+        mail.send()
+
+        letras[0].message_post(
+            body=body,
+            subject=subject,
+            attachment_ids=attachment_ids,
+        )
 
         return {
             'type': 'ir.actions.act_window',
