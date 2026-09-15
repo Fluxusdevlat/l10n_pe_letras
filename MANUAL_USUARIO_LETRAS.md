@@ -1,409 +1,520 @@
 # MANUAL DE USUARIO Y OPERATIVO
-## MÓDULO DE LETRAS DE CAMBIO Y COBRANZAS PERÚ
-### Curpisco · Odoo 19 Enterprise / Community
+## MÓDULO DE LETRAS DE CAMBIO Y COBRANZAS — PERÚ
+### Curpisco · Odoo 19
+
+> **Versión del módulo documentada:** `19.0.1.35.0`
+> **Compañía:** CURPISCO S.A.C. · Moneda: PEN (S/)
+> **Última actualización:** Septiembre 2026
 
 ---
 
 ## 📋 TABLA DE CONTENIDOS
 
-1. [Introducción y Visión General](#1-introducción-y-visión-general)
-2. [Configuración Inicial y Datos Maestros](#2-configuración-inicial-y-datos-maestros)
-   - [2.1 Configuración de Clientes (res.partner)](#21-configuración-de-clientes-respartner)
-   - [2.2 Configuración de Grupos Empresariales (l10n.pe.credit.group)](#22-configuración-de-grupos-empresariales-l10npecreditgroup)
-   - [2.3 Configuración de Parámetros Globales](#23-configuración-de-parámetros-globales)
-3. [Operación 1: Emisión y Generación de Letras de Cambio](#3-operación-1-emisión-y-generación-de-letras-de-cambio)
-   - [3.1 Generación Automática desde Facturas de Cliente](#31-generación-automática-desde-facturas-de-cliente)
-   - [3.2 Registro y Gestión de la Letra de Cambio Formulario a Detalle](#32-registro-y-gestión-de-la-letra-de-cambio-formulario-a-detalle)
-   - [3.3 Ciclo de Vida y Transición de Estados (Clic a Clic)](#33-ciclo-de-vida-y-transición-de-estados-clic-a-clic)
-4. [Operación 2: Modalidad "CABAL" (Canje 100% Factura)](#4-operación-2-modalidad-cabal-canje-100-factura)
-5. [Operación 3: Agrupación y Envío de Planillas al Banco](#5-operación-3-agrupación-y-envío-de-planillas-al-banco)
-6. [Seguimiento 1: Protesto de Letras de Cambio](#6-seguimiento-1-protesto-de-letras-de-cambio)
-7. [Seguimiento 2: Renovación de Letras de Cambio](#7-seguimiento-2-renovación-de-letras-de-cambio)
-8. [Seguimiento 3: Proyección Semanal de Cobranza (Pivot / Gráfico)](#8-seguimiento-3-proyección-semanal-de-cobranza-pivot--gráfico)
-9. [Seguimiento 4: Envío Masivo por Email y Exportación Excel](#9-seguimiento-4-envío-masivo-por-email-y-exportación-excel)
-10. [Matriz de Seguridad, Bloqueos Comerciales y Reglas de Negocio](#10-matriz-de-seguridad-bloqueos-comerciales-y-reglas-de-negocio)
+1. [Introducción y Glosario](#1-introducción-y-glosario)
+2. [Accesos y Menú del Módulo](#2-accesos-y-menú-del-módulo)
+3. [Configuración Inicial y Datos Maestros](#3-configuración-inicial-y-datos-maestros)
+   - [3.1 Ficha del Cliente](#31-ficha-del-cliente-respartner)
+   - [3.2 Grupos Empresariales](#32-grupos-empresariales-l10npecreditgroup)
+   - [3.3 Parámetros Globales (Ajustes)](#33-parámetros-globales-ajustes)
+4. [Emisión de Letras de Cambio](#4-emisión-de-letras-de-cambio)
+   - [4.1 Generación Automática desde Facturas](#41-generación-automática-desde-facturas)
+   - [4.2 Registro Manual (Formulario Campo por Campo)](#42-registro-manual-formulario-campo-por-campo)
+   - [4.3 Reglas de Selección de Facturas](#43-reglas-de-selección-de-facturas)
+5. [Ciclo de Vida de la Letra (Paso a Paso)](#5-ciclo-de-vida-de-la-letra-paso-a-paso)
+6. [Modalidad Cabal](#6-modalidad-cabal)
+7. [Planillas de Envío al Banco](#7-planillas-de-envío-al-banco)
+8. [Protesto de Letras](#8-protesto-de-letras)
+9. [Renovación de Letras](#9-renovación-de-letras)
+10. [Proyección Semanal de Cobranza](#10-proyección-semanal-de-cobranza)
+11. [Envío por Email y Exportación Excel](#11-envío-por-email-y-exportación-excel)
+12. [Reglas de Negocio, Bloqueos y Seguridad](#12-reglas-de-negocio-bloqueos-y-seguridad)
+13. [Catálogo de Reportes](#13-catálogo-de-reportes)
 
 ---
 
-## 1. INTRODUCCIÓN Y VISIÓN GENERAL
+## 1. INTRODUCCIÓN Y GLOSARIO
 
-El módulo **`l10n_pe_letras`** ha sido diseñado a medida para gestionar el ciclo completo de cobranzas con **Letras de Cambio al Descuento Bancario** y operaciones **Cabal** en empresas peruanas bajo Odoo 19.
+El módulo **`l10n_pe_letras`** gestiona el ciclo completo de cobranza con **Letras de Cambio al Descuento Bancario** y operaciones **Cabal**, adaptado a la operación peruana de Curpisco.
 
-### Objetivos principales:
-- **Automatización del Canje:** Convertir facturas de clientes en letras individuales o agrupadas.
-- **Control de Riesgo Crediticio:** Evaluar líneas de crédito individuales y por Grupo Empresarial.
-- **Bloqueo Comercial Automático:** Detener automáticamente la confirmación de Pedidos de Venta (`sale.order`) si un cliente excede su línea de crédito o posee letras protestadas sin regularizar.
-- **Descuento Bancario:** Armar planillas físicas y electrónicas para envío a bancos (BCP, Scotiabank, BBVA).
-- **Control de Protestos y Renovaciones:** Registrar protestos con generación automática de Nota de Débito por gastos bancarios y aplicar renovaciones con plazo fijo de 30 días.
-- **Proyección Semanal Integrada:** Eliminar los reportes manuales en Excel mediante vistas Pivot dinámicas por vendedor y semana de vencimiento.
+### Glosario de términos
 
----
-
-## 2. CONFIGURACIÓN INICIAL Y DATOS MAESTROS
-
-Antes de iniciar la emisión de letras, deben configurarse los parámetros de crédito en la ficha del cliente y los Grupos Empresariales.
-
-### 2.1 Configuración de Clientes (`res.partner`)
-
-#### ¿Para qué sirve?
-Permite asignar el plazo de crédito predeterminado para las letras de cada cliente, vincularlo a un grupo empresarial y consultar su estado de bloqueo y letras protestadas.
-
-#### Explicación Campo por Campo:
-- **Grupo Empresarial (`credit_group_id`):** Selecciona el grupo corporativo al que pertenece el cliente. Si pertenece a un grupo, la línea de crédito se calculará de forma acumulada entre todas las empresas del grupo.
-- **Plazo de Crédito (Letras) (`letra_days_term`):** Define el plazo predeterminado en días para el cálculo automático de la fecha de vencimiento (`30 Días`, `60 Días`, `90 Días`, `120 Días`, `150 Días (Anticipo)`).
-- **Bloqueado Comercialmente (`commercial_blocked`):** Indicador tipo Checkbox (solo lectura / computado). Se marca automáticamente en **Víspera de Bloqueo** si el cliente o su grupo empresarial tienen letras protestadas pendientes.
-- **Motivo de Bloqueo (`commercial_block_reason`):** Muestra el texto explicativo del motivo por el cual el cliente no puede recibir nuevos pedidos confirmados.
-- **Cant. Letras (`letra_count`):** Contador inteligente que muestra el total de letras activas en circulación del cliente.
-- **Tiene Letras Protestadas (`has_letras_protestadas`):** Marca `True` si el cliente tiene al menos un protesto pendiente de regularizar.
-
-#### 🖱️ Guía Clic a Clic para configurar un cliente:
-1. Ve al menú **Ventas** (o **Contabilidad**) -> **Clientes**.
-2. Haz clic sobre el cliente que deseas configurar.
-3. Haz clic en la pestaña **Letras de Cambio** (ubicada dentro del contenedor principal de pestañas).
-4. Haz clic en el botón **Editar** (o modifica directamente los campos).
-5. En **Plazo de Crédito (Letras)**, selecciona el plazo contractual (ejemplo: `60 Días`).
-6. Si el cliente pertenece a un grupo corporativo, selecciona el **Grupo Empresarial** correspondiente.
-7. Haz clic en el icono **Guardar manualmente** (o Ctrl+S).
+| Término | Significado |
+|---|---|
+| **Letra de cambio** | Documento de crédito que el cliente firma prometiendo pagar un importe en una fecha. Curpisco lo descuenta en el banco para cobrar por adelantado. |
+| **Girador** | Quien emite la letra (Curpisco). |
+| **Aceptante** | El cliente que firma y sella la letra. |
+| **Descuento / Canje** | Venta de la letra al banco (BCP, Scotiabank, BBVA) para recibir el dinero antes del vencimiento. |
+| **Planilla** | Documento que agrupa varias letras y se presenta al banco para su descuento. |
+| **Protesto** | Cuando el cliente no paga al vencimiento, el banco debita el importe a Curpisco y la letra queda "protestada". |
+| **Renovación** | Pago parcial de una letra y generación de una nueva por el saldo (siempre a 30 días). |
+| **Cabal** | Modalidad para clientes especiales: la factura se canjea al 100% en el banco (telecrédito) sin letra ni firma física. |
 
 ---
 
-### 2.2 Configuración de Grupos Empresariales (`l10n.pe.credit.group`)
+## 2. ACCESOS Y MENÚ DEL MÓDULO
 
-#### ¿Para qué sirve?
-Controla el techo agregado de crédito otorgado a un conjunto de razones sociales hermanas (por ejemplo: *Distribuidora KMT + Grupo Espinal*).
-
-#### Explicación Campo por Campo:
-- **Nombre del Grupo (`name`):** Nombre identificador del grupo empresarial (Obligatorio).
-- **Empresas del Grupo (`partner_ids`):** Listado de empresas que comparten la misma línea de crédito.
-- **Línea de Crédito Asignada (`credit_limit`):** Monto máximo total en soles (S/) otorgado al grupo corporativo.
-- **Crédito Utilizado (`credit_used`):** Monto total consumido (Facturas no pagadas + Pedidos de venta por facturar + Letras en circulación).
-- **Crédito Disponible (`credit_available`):** Resultado de `Línea Asignada - Crédito Utilizado`.
-- **Pedidos Pendientes (`pending_orders_amount`):** Suma total de cotizaciones/pedidos de venta confirmados pendientes de facturación.
-- **Facturado (`invoiced_amount`):** Suma total de facturas emitidas pendientes de pago.
-
-#### 🖱️ Guía Clic a Clic para crear un Grupo Empresarial:
-1. Ve al menú principal **Letras de Cambio** -> **Configuración** -> **Grupos Empresariales**.
-2. Haz clic en el botón **Crear** (o **Nuevo**).
-3. Ingresa el **Nombre del Grupo** (ejemplo: `Grupo Comercial Espinal`).
-4. Ingresa la **Línea de Crédito Asignada** (ejemplo: `150000.00`).
-5. En la tabla **Empresas del Grupo**, haz clic en **Agregar una línea** y selecciona las empresas pertenecientes.
-6. Haz clic en **Guardar**.
-
----
-
-### 2.3 Configuración de Parámetros Globales
-
-#### ¿Para qué sirve?
-Define el correo electrónico corporativo al cual se enviará por defecto el resumen masivo de letras y reportes en Excel.
-
-#### 🖱️ Guía Clic a Clic:
-1. Ve a **Ajustes** -> desplázate a la sección **Letras de Cambio**.
-2. En el campo **Email para envío de Letras**, ingresa la dirección de correo (ejemplo: `cobranzas@curpisco.com`).
-3. Haz clic en **Guardar**.
-
----
-
-## 3. OPERACIÓN 1: EMISIÓN Y GENERACIÓN DE LETRAS DE CAMBIO
-
-Existen dos maneras de emitir una letra: automáticamente desde facturas publicadas o manualmente.
-
-### 3.1 Generación Automática desde Facturas de Cliente
-
-#### 🖱️ Guía Clic a Clic:
-1. Ve a **Contabilidad** (o **Facturación**) -> **Clientes** -> **Facturas**.
-2. Selecciona la(s) factura(s) publicada(s) no pagadas marcando el checkbox a la izquierda de cada fila.
-3. Haz clic en la rueda dentada de **Acciones** (arriba al centro) y selecciona **Generar Letras desde Facturas**.
-4. Se abrirá la ventana emergente (*Wizard*):
-   - **Facturas:** Muestra las facturas seleccionadas.
-   - **Cliente:** Detecta automáticamente el cliente.
-   - **Fecha de Emisión:** Muestra por defecto la fecha de hoy.
-   - **Fecha de Vencimiento:** Se calcula automáticamente sumando el plazo del cliente.
-   - **Banco:** (Opcional) Selecciona el banco si se conoce.
-   - **Opción de Generación:**
-     - `Una Letra por Factura`: Crea 1 letra por cada factura seleccionada.
-     - `Una Letra por todas las Facturas`: Consolida la suma de todas las facturas en una sola letra.
-     - `Dividir una Factura en Varias Letras (Cuotas)`: Permite seleccionar 1 factura y dividirla en **N cuotas** (ej. 3 letras) con vencimientos escalonados (ej. cada 30 días: a 30, 60 y 90 días) dividiendo automáticamente el importe de la factura en partes iguales con ajuste de céntimos.
-5. Haz clic en el botón **Generar Letra(s)**. El sistema creará los registros fraccionados y te redirigirá a la lista de letras generadas.
-
-
----
-
-### 3.2 Registro y Gestión de la Letra de Cambio (Formulario a Detalle)
-
-#### Explicación Campo por Campo de la Letra (`l10n.pe.letra`):
-
-##### Encabezado y Datos Generales:
-- **N° Letra (`name`):** Correlativo interno asignado automáticamente por el sistema (ejemplo: `LET/2026/00001`).
-- **Cliente (`partner_id`):** Razón social del deudor (Obligatorio).
-- **Vendedor (`salesperson_id`):** Vendedor asignado comercialmente al cliente (Autocompletado).
-- **Tipo de Instrumento (`instrument_type`):**
-  - `Letra de Cambio`: Requiere firma y sello físico del cliente antes de enviar al banco.
-  - `Cabal`: Operación directa en telecrédito sin requerimiento de documento físico firmado.
-- **Tipo (`tipo`):** `Emisión` (letra original de venta) o `Canje` (letra producto de renovación o canje especial).
-- **Banco (`bank_id`):** Banco asignado para el descuento (BCP, Scotiabank, BBVA).
-- **Planilla (`planilla_id`):** Planilla bancaria en la que fue enviada la letra (Autocompletado al asociar a planilla).
-
-##### Fechas y Plazos:
-- **Fecha de Emisión (`date_emission`):** Fecha de expedición del documento.
-- **Plazo en Días (`days_term`):** Plazo otorgado (`30`, `60`, `90`, `120`, `150`).
-- **Fecha de Vencimiento (`date_due`):** Fecha máxima de pago sin protesto.
-- **N° Único (Banco) (`unique_number`):** Código numérico asignado por el banco al ingresar a cobranza/descuento (necesario para que el cliente pague en ventanilla).
-- **Valor Banco (Interno) (`internal_bank_number`):** Número de control interno del banco para conciliaciones.
-- **Fecha de Pago (`date_payment`):** Fecha en la que el cliente o banco canceló la letra.
-
-##### Importes:
-- **Importe Total (`amount_total`):** Valor nominal de la letra.
-- **Importe Pagado (`amount_paid`):** Suma acumulada de amortizaciones.
-- **Saldo Pendiente (`amount_residual`):** Valor líquido pendiente de cobro.
-
----
-
-### 3.3 Ciclo de Vida y Transición de Estados (Clic a Clic)
-
-Cada letra sigue una secuencia estricta de botones de acción:
+El módulo tiene una aplicación propia llamada **Letras de Cambio** (ícono en el menú de aplicaciones) con esta estructura:
 
 ```
-[Borrador] ➔ (Enviar al Cliente) ➔ [Enviada] ➔ (Registrar Firma + Adjuntar) ➔ [Firmada] ➔ (Enviar al Banco) ➔ [En Banco] ➔ (Registrar Pago) ➔ [Pagada]
+Letras de Cambio
+├── Operaciones
+│   ├── Letras de Cambio              (listado general de letras)
+│   ├── Operaciones Cabal             (listado filtrado por tipo Cabal)
+│   ├── Planillas                     (planillas de envío al banco)
+│   └── Generar Letras desde Facturas (asistente)
+├── Seguimiento
+│   ├── Proyección Semanal            (pivot / gráfico)
+│   ├── Protestos                     (registro de protestos)
+│   └── Renovaciones                  (historial de renovaciones)
+├── Reportes
+│   ├── Proyección Semanal (Pivot)
+│   └── Exportar Resumen Excel / Email
+└── Configuración
+    └── Grupos Empresariales
 ```
 
-#### Paso 1: Enviar al Cliente (`draft` ➔ `sent`)
-1. Dentro del formulario de la letra en estado **Borrador**, haz clic en el botón **Enviar al Cliente**.
-2. El estado cambiará a **Enviada**. La letra puede imprimirse en PDF mediante el botón **Imprimir Letra**.
-
-#### Paso 2: Registrar Firma y Adjuntar Documento (`sent` ➔ `signed`)
-1. Una vez que el cliente devuelve la letra física con firma y sello oficial:
-2. Ve al panel lateral de comentarios (**Chatter**) a la derecha del formulario.
-3. Haz clic en el icono de **Adjuntar archivo** (clip/cámara) y sube la imagen o PDF de la letra firmada.
-4. Haz clic en el botón **Registrar Firma** en la barra superior.
-5. El estado cambiará a **Firmada**.
-
-#### Paso 3: Enviar al Banco (`signed` ➔ `in_bank`)
-1. Haz clic en el botón **Enviar al Banco**.
-2. **Validación de Seguridad:** Si el instrumento es `Letra de Cambio` y no has adjuntado la imagen firmada en el chatter, el sistema mostrará un bloqueo de seguridad impidiendo el envío.
-3. Al validar la presencia del adjunto, la letra pasará al estado **En Banco**.
-
-#### Paso 4: Registrar Pago (`in_bank` ➔ `paid`)
-1. Cuando el banco confirma la cancelación por parte del cliente:
-2. Haz clic en el botón **Registrar Pago**.
-3. El estado cambiará a **Pagada** y se registrará la fecha de pago actual.
+**Acceso alternativo desde Contabilidad:** `Contabilidad → Clientes → Letras de Cambio`.
 
 ---
 
-## 4. OPERACIÓN 2: MODALIDAD "CABAL" (CANJE 100% FACTURA)
+## 3. CONFIGURACIÓN INICIAL Y DATOS MAESTROS
 
-### ¿Qué es Cabal?
-Es una modalidad especial utilizada para clientes corporativos donde las facturas se canjean al 100% en la plataforma bancaria (Telecrédito) sin requerir la emisión, firma ni sello físico de una letra en papel.
+Antes de emitir letras conviene configurar el plazo de crédito por cliente y, si aplica, los Grupos Empresariales.
 
-### 🖱️ Guía Clic a Clic para Operaciones Cabal:
-1. Ve al menú **Letras de Cambio** -> **Operaciones** -> **Operaciones Cabal**.
-2. Haz clic en **Crear**.
+### 3.1 Ficha del Cliente (`res.partner`)
+
+#### ¿Para qué sirve?
+Asignar el plazo de crédito del cliente, vincularlo a un grupo empresarial y consultar su estado de bloqueo y sus letras.
+
+#### Campo por campo (pestaña **Letras de Cambio**)
+
+> *La pestaña solo se muestra para contactos de tipo **Compañía** (`is_company`).*
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Grupo Empresarial** | `credit_group_id` | Grupo corporativo al que pertenece el cliente. Si tiene grupo, su crédito se calcula de forma **acumulada** entre todas las empresas. |
+| **Plazo de Crédito (Letras)** | `letra_days_term` | Plazo por defecto para calcular el vencimiento: `30`, `60`, `90`, `120` o `150 Días (Anticipo)`. |
+| **Bloqueado Comercialmente** | `commercial_blocked` | Solo lectura. Se activa automáticamente si el cliente (o su grupo) tiene letras protestadas pendientes de regularizar. |
+| **Motivo de Bloqueo** | `commercial_block_reason` | Texto que explica por qué el cliente está bloqueado. |
+| **Cant. Letras** | `letra_count` | Número de letras activas del cliente (excluye canceladas y pagadas). |
+| **Tiene Letras Protestadas** | `has_letras_protestadas` | Se marca si el cliente tiene al menos un protesto pendiente. |
+
+Debajo se lista el detalle de **Letras** del cliente (N° Letra, Importe Total, Saldo, Vencimiento y Estado).
+
+#### 🖱️ Guía paso a paso
+1. Ve a **Ventas** o **Contabilidad → Clientes**.
+2. Abre la ficha del cliente.
+3. Entra a la pestaña **Letras de Cambio**.
+4. Revisa/edita **Plazo de Crédito (Letras)** (ej. `60 Días`).
+5. Si pertenece a un grupo, selecciona el **Grupo Empresarial**.
+6. Guarda (`Ctrl + S`).
+
+---
+
+### 3.2 Grupos Empresariales (`l10n.pe.credit.group`)
+
+#### ¿Para qué sirve?
+Agrupa varias razones sociales que **comparten una misma línea de crédito** (ej. *Distribuidora KMT + Grupo Espinal*).
+
+#### Campo por campo
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Nombre del Grupo** | `name` | Nombre identificador (obligatorio). |
+| **Empresas del Grupo** | `partner_ids` | Empresas que comparten la línea. |
+| **Cant. Empresas** | `partner_count` | Número de empresas del grupo. |
+| **Línea de Crédito Asignada** | `credit_limit` | Monto máximo en soles otorgado al grupo. |
+| **Crédito Utilizado** | `credit_used` | Consumo total = facturas pendientes + pedidos por facturar + letras en circulación. |
+| **Crédito Disponible** | `credit_available` | `Línea Asignada − Crédito Utilizado`. |
+| **Pedidos Pendientes** | `pending_orders_amount` | Pedidos de venta confirmados pendientes de facturar. |
+| **Facturado** | `invoiced_amount` | Facturas emitidas pendientes de pago. |
+
+#### 🖱️ Guía paso a paso
+1. Ve a **Letras de Cambio → Configuración → Grupos Empresariales**.
+2. Clic en **Crear/Nuevo**.
+3. Escribe el **Nombre del Grupo**.
+4. Ingresa la **Línea de Crédito Asignada** (ej. `150000.00`).
+5. En **Empresas del Grupo**, **Agregar una línea** y selecciona las empresas.
+6. Guarda.
+
+---
+
+### 3.3 Parámetros Globales (Ajustes)
+
+#### ¿Para qué sirve?
+Define el correo destino por defecto del wizard **Enviar Letras por Email**.
+
+#### Campo por campo
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Email para envío de Letras** | `letras_email_to` | Correo destino predeterminado (parámetro `l10n_pe_letras.email_to`). |
+
+#### 🖱️ Guía paso a paso
+1. Ve a **Ajustes**.
+2. Baja hasta la sección **Letras de Cambio** (visible para Administradores de Contabilidad).
+3. En **Email para envío**, escribe el correo (ej. `cobranzas@curpisco.com`).
+4. Guarda.
+
+---
+
+## 4. EMISIÓN DE LETRAS DE CAMBIO
+
+Hay dos vías: **automática desde facturas** (recomendada) o **manual**.
+
+### 4.1 Generación Automática desde Facturas
+
+#### 🖱️ Cómo abrir el asistente (3 rutas)
+- **Desde Letras:** `Letras de Cambio → Operaciones → Generar Letras desde Facturas`.
+- **Desde el listado de Letras:** botón **`Generar Letras desde Facturas`** en la barra superior.
+- **Desde Facturación:** selecciona facturas en la lista → menú **Acciones** → **Generar Letras desde Facturas**.
+
+#### Campo por campo del asistente
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Opción de Generación** | `generate_option` | Ver las 3 opciones abajo. |
+| **Facturas** | `invoice_ids` | Facturas a convertir. Se **auto-llenan** si venías de facturación. Solo admite facturas de cliente, publicadas, no pagadas y **no cubiertas aún por letras**. |
+| **Cantidad de Letras (Cuotas)** | `num_letras` | Solo si eliges *Dividir en Cuotas*. |
+| **Intervalo (Días)** | `days_interval` | Solo si eliges *Dividir en Cuotas*. Días entre vencimientos. |
+| **Cliente** | `partner_id` | Solo lectura; se detecta de las facturas. |
+| **Banco** | `bank_id` | Opcional; banco al que se destinarán. |
+| **Fecha de Emisión** | `date_emission` | Por defecto hoy. |
+| **Fecha Vencimiento (1ra Cuota / General)** | `date_due` | Fecha base. Si se deja vacía, se calcula con el plazo del cliente. |
+| **Importe Total** | `amount_total` | Suma del **saldo disponible por letrear** de las facturas. |
+| **Cronograma de Letras a Generar** | `line_ids` | Vista previa editable (cuota, concepto, vencimiento, monto). |
+
+#### Las 3 opciones de generación
+1. **Una Letra por Factura** → 1 letra por cada factura seleccionada.
+2. **Una Letra por todas las Facturas** → consolida todas en 1 sola letra (mismo cliente).
+3. **Dividir una Factura en Varias Letras (Cuotas)** → divide 1 factura en **N cuotas** con vencimientos escalonados (ej. 30/60/90 días) y ajuste de céntimos en la última.
+
+#### 🖱️ Paso a paso
+1. Abre el asistente (cualquiera de las 3 rutas).
+2. Selecciona la **Opción de Generación**.
+3. Revisa las **Facturas** (y cuotas/intervalo si divides).
+4. Ajusta **Fecha de Emisión**, **Vencimiento** y **Banco** si hace falta.
+5. En el **Cronograma**, edita fechas o montos de alguna cuota si el cliente lo pide.
+6. Clic en **Generar Letra(s)**. Odoo crea las letras y te muestra el resultado.
+
+---
+
+### 4.2 Registro Manual (Formulario Campo por Campo)
+
+Para una letra individual: `Letras de Cambio → Operaciones → Letras de Cambio → Nuevo`.
+
+#### Datos Principales
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **N° Letra** | `name` | Correlativo automático (secuencia `LC-AAAA-00000`), único por compañía. |
+| **Cliente** | `partner_id` | Razón social del deudor (obligatorio). |
+| **Vendedor** | `salesperson_id` | Vendedor asignado al cliente (solo lectura, viene de la ficha del cliente). |
+| **Tipo de Instrumento** | `instrument_type` | `Letra de Cambio` o `Cabal`. |
+| **Tipo** | `tipo` | `Emisión` (letra original) o `Canje` (renovación/canje). |
+| **Banco** | `bank_id` | Banco de descuento (BCP, Scotiabank, BBVA). |
+| **Planilla** | `planilla_id` | Planilla en la que se incluyó la letra (solo lectura). |
+| **Cargar Letra Firmada (PDF)** | `signed_document` | Archivo PDF de la letra firmada y sellada. **Solo PDF.** No se muestra en Cabal. |
+
+#### Vencimiento y Banco
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Fecha de Emisión** | `date_emission` | Fecha de expedición. |
+| **Plazo en Días** | `days_term` | `30`, `60`, `90`, `120`, `150`. |
+| **Fecha de Vencimiento** | `date_due` | Emisión + plazo (editable). |
+| **N° Único (Banco)** | `unique_number` | Número que asigna el banco; con él paga el cliente. |
+| **Valor Banco (Interno)** | `internal_bank_number` | Número interno del banco para conciliación. |
+| **Fecha de Pago** | `date_payment` | Fecha de cancelación (se llena al Registrar Pago). |
+| **Fecha de Protesto** | `protest_date` | Aparece si la letra fue protestada. |
+| **Nota de Débito (Gastos)** | `debit_note_id` | Nota de débito generada por el protesto. |
+| **Moneda** | `currency_id` | Moneda de la compañía. |
+| **Compañía** | `company_id` | Compañía (multi-compañía). |
+
+#### Importes
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Importe Total** | `amount_total` | Valor nominal de la letra. |
+| **Importe Pagado** | `amount_paid` | Total amortizado (al Registrar Pago se iguala al total). |
+| **Saldo Pendiente** | `amount_residual` | `Importe Total − Importe Pagado`. |
+
+#### Pestañas
+- **Facturas Asociadas** (`line_ids`): facturas incluidas. Campos: **Factura** (`move_id`), **Monto Aplicado** (`amount`), **Saldo Factura** (`amount_residual`), **Fecha Factura** (`date_invoice`). El selector de facturas filtra por el cliente y **excluye las ya cubiertas** por letras.
+- **Renovaciones**: letras destino (`renovacion_destino_ids`) y letra origen (`renovacion_origin_id`).
+- **Observaciones** (`notes`): notas internas.
+- **Chatter** (lateral): historial y adjuntos.
+
+---
+
+### 4.3 Reglas de Selección de Facturas
+
+Para evitar el **doble conteo**, el sistema controla el estado de cada factura respecto a las letras:
+
+| Estado Letras (`letra_state`) | Significado | ¿Se puede elegir? |
+|---|---|---|
+| `Sin Letra` | La factura no tiene letras | ✅ Sí |
+| `Parcialmente en Letras` | Tiene letras pero **queda saldo por letrear** | ✅ Sí (solo el saldo pendiente) |
+| `Totalmente en Letras` | Ya está cubierta por letras | ❌ No aparece en el selector |
+
+- El **monto propuesto** al crear la letra es el **saldo disponible por letrear** (`Saldo Factura − Monto en Letras`).
+- Si **cancelas** una letra, sus montos dejan de contar y la factura **vuelve a quedar disponible**.
+- El sistema **impide por validación** que la suma de montos en letras de una factura supere su total.
+
+---
+
+## 5. CICLO DE VIDA DE LA LETRA (PASO A PASO)
+
+### Estados
+`Borrador` → `Enviada` → `Firmada` → `En Banco` → `Pagada` (o `Protestada`). También `Cancelada` y `Renovada`.
+
+### Matriz de botones según estado
+
+| Estado | Botones visibles |
+|---|---|
+| **Borrador** (`draft`) | Enviar al Cliente · Imprimir Letra para Firma · Anular |
+| **Enviada** (`sent`) sin PDF | **Registrar Firma (gris, deshabilitado)** · Imprimir Letra para Firma · Anular |
+| **Enviada** (`sent`) con PDF | **Registrar Firma (activo)** · Imprimir Letra para Firma · Anular |
+| **Firmada** (`signed`) | Enviar al Banco · Registrar Pago · Ver Letra Firmada · Imprimir |
+| **En Banco** (`in_bank`) | Registrar Pago · Registrar Protesto · Renovar · Ver Letra Firmada |
+| **Protestada** (`protested`) | Renovar · Anular |
+| **Cabal** | Enviar al Cliente y Enviar al Banco directo (no hay firma) |
+
+### Paso 1 — Enviar al Cliente (`Borrador → Enviada`)
+1. Abre la letra en **Borrador**.
+2. Clic en **Enviar al Cliente**.
+3. El estado pasa a **Enviada**. Usa **Imprimir Letra para Firma** para obtener el PDF y enviarlo al cliente.
+
+### Paso 2 — Cargar la letra firmada y Registrar Firma (`Enviada → Firmada`)
+1. Cuando el cliente devuelva la letra firmada y sellada, sube el **PDF** en el campo **Cargar Letra Firmada (PDF)**.
+   - El sistema **solo acepta PDF**; otro formato es rechazado.
+2. Sin archivo, el botón **Registrar Firma** se ve **gris (deshabilitado)**.
+3. Al cargar el PDF, el botón se **activa en azul**.
+4. Clic en **Registrar Firma**. El estado pasa a **Firmada**.
+
+### Paso 3 — Enviar al Banco (`Firmada → En Banco`)
+1. Clic en **Enviar al Banco**. (Valida que exista el PDF firmado.)
+2. El estado pasa a **En Banco**. Asigna **N° Único** y **Valor Banco** cuando el banco los entregue.
+
+### Paso 4 — Registrar Pago (`Firmada / En Banco → Pagada`)
+1. Cuando el cliente cancela, clic en **Registrar Pago**.
+2. El estado pasa a **Pagada**, se llena la **Fecha de Pago** y el **Saldo** queda en `0.00`.
+
+### Consultar el PDF firmado
+- Clic en **Ver Letra Firmada** para abrir/descargar el documento subido.
+
+### Anular
+- **Anular** pasa la letra a **Cancelada** (disponible desde Borrador/Enviada/Firmada).
+
+---
+
+## 6. MODALIDAD CABAL
+
+### ¿Qué es?
+Modalidad para clientes especiales en la que la factura se **canjea al 100% en el banco** (telecrédito) **sin letra ni firma física**. El cliente solo confirma el vencimiento por correo.
+
+### ¿Dónde se elige?
+No está en Ajustes: se elige por operación con el campo **Tipo de Instrumento**.
+
+### 🖱️ Paso a paso
+1. Ve a **Letras de Cambio → Operaciones → Operaciones Cabal** (o crea una letra y cambia **Tipo de Instrumento** a `Cabal`).
+2. **Crear**.
 3. Selecciona el **Cliente**.
-4. El campo **Tipo de Instrumento** vendrá predeterminado en `Cabal`.
-5. En la pestaña **Facturas Asociadas**, agrega la factura confirmada enviada por correo.
-6. Haz clic en **Guardar**.
-7. En esta modalidad, puedes hacer clic directamente en **Enviar al Banco** (sin pasar por firma física ni requerir adjunto obligatorio).
+4. El **Tipo de Instrumento** viene en `Cabal`.
+5. En **Facturas Asociadas**, agrega la factura confirmada.
+6. Guarda.
+7. En Cabal **no se muestran** el campo de firma ni el botón **Registrar Firma**; se envía con **Enviar al Banco** directamente.
 
 ---
 
-## 5. OPERACIÓN 3: AGRUPACIÓN Y ENVÍO DE PLANILLAS AL BANCO
+## 7. PLANILLAS DE ENVÍO AL BANCO
 
 ### ¿Para qué sirve?
-Agrupa un conjunto de letras firmadas para enviarlas físicamente y electrónicamente a una entidad bancaria (BCP, Scotiabank, BBVA) para su descuento o cobranza.
+Agrupar letras para presentarlas al banco (BCP, Scotiabank, BBVA).
 
-### Explicación Campo por Campo de la Planilla (`l10n.pe.letra.planilla`):
-- **N° Planilla (`name`):** Secuencia correlativa de la planilla (ejemplo: `PLAN/2026/00001`).
-- **Banco (`bank_id`):** Entidad bancaria receptora.
-- **Fecha (`date`):** Fecha de armador y presentación de la planilla.
-- **Estado (`state`):** `Borrador` ➔ `Enviada al Banco` ➔ `Confirmada`.
-- **Importe Total (`amount_total`):** Suma automática del importe de todas las letras incluidas.
-- **Cant. Letras (`letra_count`):** Número total de letras en la planilla.
+### Campo por campo (`l10n.pe.letra.planilla`)
 
-### 🖱️ Guía Clic a Clic para crear y procesar una Planilla:
-1. Ve al menú **Letras de Cambio** -> **Operaciones** -> **Planillas**.
-2. Haz clic en **Crear**.
-3. Selecciona el **Banco** (ejemplo: `Banco de Crédito del Perú - BCP`).
-4. En la tabla **Letras**, haz clic en **Agregar una línea** y selecciona todas las letras en estado `Firmada` o `Borrador` que se enviarán al banco.
-5. Haz clic en **Guardar**.
-6. Haz clic en **Enviar al Banco**. El sistema pasará la planilla a estado `Enviada al Banco` y cambiará automáticamente todas las letras contenidas al estado `En Banco`.
-7. Haz clic en los botones de reporte en la parte superior:
-   - **Imprimir Planilla:** Genera el documento resumen en PDF con la lista de letras para la firma del Gerente.
-   - **Imprimir Letras:** Descarga en un solo archivo PDF todas las letras incluidas en la planilla.
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **N° Planilla** | `name` | Correlativo (`PL-AAAA-00000`). |
+| **Banco** | `bank_id` | Entidad receptora (obligatorio). |
+| **Fecha** | `date` | Fecha de armado. |
+| **Estado** | `state` | `Borrador` → `Enviada al Banco` → `Confirmada`. |
+| **Importe Total** | `amount_total` | Suma de las letras incluidas. |
+| **Cant. Letras** | `letra_count` | Número de letras incluidas. |
+| **Letras** | `letra_ids` | Detalle de las letras (no canceladas). |
+| **Observaciones** | `notes` | Notas. |
 
----
+### 🖱️ Paso a paso
+1. Ve a **Letras de Cambio → Operaciones → Planillas**.
+2. **Crear**, selecciona el **Banco** y la **Fecha**.
+3. En **Letras**, **Agregar una línea** y elige las letras a incluir.
+4. Guarda.
+5. **Enviar al Banco** para marcar la planilla como *Enviada al Banco* (luego **Confirmar** cuando el banco la acepte).
+6. Imprime:
+   - **Imprimir Planilla:** PDF resumen de la planilla (firma de Gerencia / recepción del banco).
+   - **Imprimir Letras:** un solo PDF con todas las letras incluidas.
 
-## 6. SEGUIMIENTO 1: PROTESTO DE LETRAS DE CAMBIO
-
-### ¿Cuándo ocurre un Protesto?
-Si al vencimiento de la letra (más 8 días de gracia concedidos por el banco), el cliente no ha cancelado la deuda en el banco (Día 9), el banco debita el dinero de la cuenta de Curpisco y la letra entra en **Protesto** (Estado `protested`).
-
-### 🖱️ Guía Clic a Clic para registrar un Protesto:
-1. Abre la letra que se encuentra en estado **En Banco**.
-2. Haz clic en el botón rojo **Registrar Protesto**.
-3. Se abrirá la ventana emergente de registro:
-   - **Fecha de Protesto:** Fecha en la que el banco ejecutó el devoto/protesto.
-   - **Monto Protestado:** Importe nominal no pagado.
-   - **Gastos y Costas:** Gastos bancarios y notariales cobrados por el banco (ejemplo: `150.00`).
-   - **Total:** Suma automática del monto protestado + gastos.
-4. Haz clic en **Guardar / Confirmar**.
-
-### ⚡ EFECTOS AUTOMÁTICOS DEL PROTESTO EN EL SISTEMA:
-1. **Cambio de Estado:** La letra pasa automáticamente a estado **Protestada**.
-2. **Generación de Nota de Débito:** El sistema crea automáticamente un borrador de **Nota de Débito** (`account.move`) a nombre del cliente por el concepto de *Gastos y Costas de Protesto Bancario*.
-3. **Bloqueo Comercial Automático:**
-   - El cliente y todas las empresas de su **Grupo Empresarial** quedan marcados con `commercial_blocked = True`.
-   - Si un vendedor intenta confirmar un **Pedido de Venta** (`sale.order.action_confirm`) para este cliente o grupo, Odoo **bloqueará la transacción** mostrando el mensaje de error:
-     > *"No se puede confirmar el pedido. El cliente X está bloqueado comercialmente. Motivo: Tiene letras protestadas pendientes de regularización."*
-
-### 🖱️ Guía Clic a Clic para Regularizar un Protesto:
-1. Ve al menú **Letras de Cambio** -> **Seguimiento** -> **Protestos**.
-2. Selecciona el protesto en estado `Pendiente`.
-3. Cuando el cliente paga el protesto y la nota de débito de gastos, haz clic en **Regularizar**.
-4. Selecciona el **Tipo de Regularización** (`Pago`, `Renovación`, `Acuerdo`) e ingresa la **Fecha de Regularización**.
-5. Al regularizar todos los protestos pendientes, el bloqueo comercial sobre el cliente se **levantará automáticamente**.
+> ℹ️ El botón **Enviar al Banco** de la *planilla* solo cambia el estado de la planilla. Cada letra se envía al banco desde su propio botón **Enviar al Banco** (donde queda en estado *En Banco* y se asocia a la planilla).
 
 ---
 
-## 7. SEGUIMIENTO 2: RENOVACIÓN DE LETRAS DE CAMBIO
+## 8. PROTESTO DE LETRAS
 
-### ¿Cuándo se aplica una Renovación?
-Cuando un cliente no puede pagar el 100% de una letra al vencimiento y negocia pagar un porcentaje inicial (ejemplo: 40%) y diferir el saldo en una **nueva letra**.
+### ¿Cuándo ocurre?
+Cuando el cliente no paga al vencimiento (más los 8 días de gracia del banco), el banco debita el importe a Curpisco y la letra **protesta**.
 
-### Regla Bancaria Inflexible (RN-004):
-El plazo de la nueva letra generada por renovación es **estrictamente de 30 días** (impuesto por el sistema bancario peruano).
+### 🖱️ Registrar un protesto
+1. Abre la letra en estado **En Banco**.
+2. Clic en **Registrar Protesto**.
+3. Completa:
+   - **Fecha de Protesto** (`date_protest`).
+   - **Monto Protestado** (`amount`).
+   - **Gastos y Costas** (`gastos`).
+   - **Total** (`total`): suma automática.
+   - **Observaciones** (`notes`).
+4. Guarda.
 
-### 🖱️ Guía Clic a Clic para ejecutar una Renovación:
-1. Abre la letra que se encuentra en estado **En Banco** o **Protestada**.
-2. Haz clic en el botón amarillo **Renovar**.
-3. Se abrirá el wizard **Asistente de Renovación de Letra**:
-   - **Monto Original:** Muestra el saldo de la letra origen.
-   - **Intereses:** Ingresa los intereses bancarios cobrados por la prórroga (ejemplo: `50.00`).
-   - **Gastos:** Gastos administrativos (ejemplo: `20.00`).
-   - **Nuevo Monto:** Muestra el monto computable de la nueva letra.
-   - **Fecha de Emisión:** Fecha de la renovación.
-   - **Plazo Renovación:** Fijado automáticamente en `30 Días (Obligatorio Banco)`.
-   - **Nueva Fecha de Vencimiento:** Calculada automáticamente a 30 días de la emisión.
-   - **Motivo de Renovación:** Texto explicativo del acuerdo.
-4. Haz clic en **Renovar Letra**.
+### ⚡ Efectos automáticos
+1. La letra pasa a **Protestada** y guarda su **Fecha de Protesto**.
+2. Se genera un **borrador de Nota de Débito** (`account.move`) al cliente por los **Gastos y Costas**, vinculado en la letra (`debit_note_id`). *(Si los gastos son 0, no se genera nota.)*
+3. El cliente y su **Grupo Empresarial** quedan **bloqueados comercialmente**.
 
-### ⚡ EFECTOS AUTOMÁTICOS DE LA RENOVACIÓN:
-1. La letra original pasa al estado **Renovada** (cerrando su ciclo activo).
-2. Se crea automáticamente una **nueva Letra de Cambio** por el monto del saldo a 30 días de vencimiento.
-3. Se establece un vínculo de trazabilidad bidireccional (`renovacion_origin_id` y `renovacion_destino_ids`).
+### 🖱️ Regularizar
+1. Ve a **Letras de Cambio → Seguimiento → Protestos**.
+2. Abre el protesto en estado **Pendiente**.
+3. Clic en **Regularizar** y registra **Fecha de Regularización** y **Tipo** (`Pago`, `Renovación`, `Acuerdo`, `Otro`).
+4. Al no quedar protestos pendientes, el **bloqueo comercial se levanta**.
+
+### Campo por campo (`l10n.pe.letra.protesto`)
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **N° Protesto** | `name` | Correlativo (`PR-AAAA-00000`). |
+| **Letra** | `letra_id` | Letra protestada. |
+| **Cliente** | `partner_id` | Cliente (autocompletado). |
+| **Fecha de Protesto** | `date_protest` | Fecha del protesto. |
+| **Monto Protestado** | `amount` | Importe no pagado. |
+| **Gastos y Costas** | `gastos` | Gastos bancarios/notariales. |
+| **Total** | `total` | Suma automática. |
+| **Estado** | `state` | `Pendiente` / `Regularizado`. |
+| **Fecha de Regularización** | `resolution_date` | Fecha de solución. |
+| **Tipo de Regularización** | `resolution_type` | Forma de solución. |
+| **Nota de Débito (Gastos)** | `debit_note_id` | Documento generado. |
+| **Observaciones** | `notes` | Notas. |
 
 ---
 
-## 8. SEGUIMIENTO 3: PROYECCIÓN SEMANAL DE COBRANZA (PIVOT / GRÁFICO)
+## 9. RENOVACIÓN DE LETRAS
 
-Reemplaza por completo las plantillas manuales de Excel para la reunión ejecutiva de los lunes.
+### ¿Cuándo se aplica?
+Cuando el cliente paga solo una parte y se difiere el saldo en una **nueva letra**. El plazo de renovación es **siempre 30 días** (impuesto por el banco).
 
-### 🖱️ Guía Clic a Clic para consultar la Proyección:
-1. Ve al menú **Letras de Cambio** -> **Seguimiento** -> **Proyección Semanal**.
-2. Se cargará la vista de **Tabla Dinámica (Pivot)**:
-   - **Filas:** Vendedor (`salesperson_id`) ➔ Cliente (`partner_id`).
-   - **Columnas:** Fecha de Vencimiento agrupada por **Semana** (`date_due:week`).
+### 🖱️ Paso a paso
+1. Abre la letra en estado **En Banco** o **Protestada**.
+2. Clic en **Renovar**.
+3. En el asistente **Renovar Letra**, completa:
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Letra a Renovar** | `letra_origin_id` | Letra origen (solo lectura). |
+| **Cliente** | `partner_id` | Cliente (solo lectura). |
+| **Banco** | `bank_id` | Banco. |
+| **Fecha de Emisión** | `date_emission` | Fecha de la nueva letra. |
+| **Plazo Renovación** | `days_term` | Fijado en `30 Días (Obligatorio Banco)`. |
+| **Nueva Fecha de Vencimiento** | `date_due` | Calculada a 30 días. |
+| **Monto Original** | `amount_origin` | Saldo de la letra origen. |
+| **Intereses** | `intereses` | Intereses de la prórroga. |
+| **Gastos** | `gastos` | Gastos administrativos. |
+| **Nuevo Monto** | `amount_new` | Se calcula como `Monto Original + Intereses + Gastos`. |
+| **Motivo de Renovación** | `reason` | Texto del acuerdo. |
+
+4. Clic en **Generar Renovación**.
+
+### ⚡ Efectos
+1. La letra original pasa a **Renovada**.
+2. Se crea una **nueva letra** (tipo *Canje*) a 30 días con el nuevo monto.
+3. Queda el vínculo de trazabilidad (origen/destino) y un registro en **Renovaciones**.
+
+---
+
+## 10. PROYECCIÓN SEMANAL DE COBRANZA
+
+Reemplaza el Excel manual de la reunión de los lunes.
+
+### 🖱️ Cómo consultarla
+1. Ve a **Letras de Cambio → Seguimiento → Proyección Semanal** (o **Reportes → Proyección Semanal (Pivot)**).
+2. Se abre una **Tabla Dinámica (Pivot)**:
+   - **Filas:** Vendedor (`salesperson_id`) → Cliente (`partner_id`).
+   - **Columnas:** Vencimiento (`date_due`).
    - **Medidas:** Importe Total y Saldo Pendiente.
-3. Para cambiar a gráfico, haz clic en el icono de **Gráfico de Barras** (arriba a la derecha).
-4. Puedes aplicar filtros dinámicos por Banco, Estado o Vendedor usando la barra de búsqueda superior.
+3. Para ver el **Gráfico de Barras**, cambia al ícono de gráficos (arriba a la derecha).
+4. Filtra por Banco, Estado o Vendedor desde la barra de búsqueda (agrupador **Vencimiento**).
 
 ---
 
-## 9. SEGUIMIENTO 4: ENVÍO MASIVO POR EMAIL Y EXPORTACIÓN EXCEL
+## 11. ENVÍO POR EMAIL Y EXPORTACIÓN EXCEL
 
-### 🖱️ Guía Clic a Clic para exportar y enviar el reporte semanal:
-1. Ve a **Letras de Cambio** -> **Operaciones** -> **Letras de Cambio**.
-2. Si deseas enviar un grupo específico, selecciona las letras y haz clic en la acción correspondiente o abre el wizard de correo.
-3. En la ventana del wizard **Enviar Letras por Email**:
-   - **Desde / Hasta:** Define el rango de fechas de emisión a consultar.
-   - **Enviar a:** Dirección de correo electrónico destino (autocompletado con la configuración global).
-   - **Filtrar por Estado:** Selecciona el estado (`En Banco`, `Protestada`, etc.).
-   - **Incluir PDF por letra:** Marca `True` si deseas adjuntar los PDFs individuales de cada letra.
-   - **Incluir Excel resumen:** Marca `True` para generar la hoja de cálculo profesional.
-4. Haz clic en **Enviar**.
-5. El sistema generará el archivo `.xlsx` con estilos ejecutivos, formatos de moneda, encabezados institucionales y totales automáticos, enviándolo por email.
+### 🖱️ Paso a paso
+1. Ve a **Letras de Cambio → Reportes → Exportar Resumen Excel / Email**.
+2. En el wizard **Enviar Letras por Email**:
+
+| Campo | Técnico | Descripción |
+|---|---|---|
+| **Desde / Hasta** | `date_from` / `date_to` | Rango de fechas de emisión. |
+| **Filtrar por Estado** | `state` | Estado a incluir (`En Banco`, `Protestada`, etc.). |
+| **Enviar a** | `email_to` | Correo destino (autocompletado desde Ajustes). |
+| **Incluir PDF por letra** | `include_report` | Adjunta el PDF individual de cada letra. |
+| **Incluir Excel resumen** | `include_excel` | Genera la hoja de cálculo `.xlsx`. |
+| **Letras a enviar** | `letra_count` | Solo lectura; cuántas letras coinciden. |
+
+3. Usa **Vista Previa** para revisar, o **Enviar Letras** para despachar.
+4. El sistema **envía un correo real** (con PDFs y/o Excel adjuntos) y deja constancia en el **Chatter**.
+
+> ⚠️ Requisito: debe estar configurado el **servidor de correo saliente** en Odoo (`Ajustes → Correo saliente`). El Excel se genera con `openpyxl`.
 
 ---
 
-## 10. MATRIZ DE SEGURIDAD, BLOQUEOS COMERCIALES Y REGLAS DE NEGOCIO
+## 12. REGLAS DE NEGOCIO, BLOQUEOS Y SEGURIDAD
 
-### Matriz de Transición de Estados:
+### Reglas aplicadas
+| Regla | Descripción |
+|---|---|
+| **Facturas no cubiertas** | No se pueden elegir facturas ya **totalmente** cubiertas por letras; el monto se limita al saldo por letrear. |
+| **Firma obligatoria** | No se registra la firma ni se envía al banco una *Letra de Cambio* sin el **PDF firmado** cargado. |
+| **Solo PDF** | El campo de letra firmada únicamente acepta archivos **PDF**. |
+| **Plazo de renovación** | Toda renovación se genera a **30 días**. |
+| **Nota de débito** | Al protestar con gastos, se genera la nota de débito al cliente. |
+| **Anti doble conteo** | La suma de montos en letras de una factura **no puede superar** su total. |
+| **Canceladas** | Las letras canceladas dejan de contar; la factura vuelve a quedar disponible. |
 
-| Estado Actual | Botón Disponible | Siguiente Estado | Requisito / Validación de Seguridad |
+### Bloqueo comercial en Pedidos de Venta (`sale.order`)
+- **Protestos:** si el cliente está bloqueado (`commercial_blocked`), Odoo **impide confirmar** el pedido con el mensaje de motivo.
+- **Exceso de crédito:** si el cliente pertenece a un Grupo Empresarial y el **crédito disponible** del grupo es menor al total del pedido, se **impide confirmar** el pedido.
+
+### Seguridad y acceso
+- **Usuario interno** (`base.group_user`): puede **ver, crear y editar** (no eliminar).
+- **Administrador de Contabilidad** (`account.group_account_manager`): **todos** los permisos, incluida eliminación y configuración.
+- **Multi-compañía:** las letras, planillas y grupos solo son visibles para las compañías del usuario.
+
+---
+
+## 13. CATÁLOGO DE REPORTES
+
+| # | Reporte | Tipo | Acceso |
 |---|---|---|---|
-| `draft` (Borrador) | Enviar al Cliente | `sent` | Ninguno. |
-| `sent` (Enviada) | Registrar Firma | `signed` | Se recomienda adjuntar PDF/imagen en Chatter. |
-| `signed` (Firmada) | Enviar al Banco | `in_bank` | **Obligatorio:** Adjunto de firma en Chatter (si es tipo Letra). |
-| `in_bank` (En Banco) | Registrar Pago | `paid` | Registra la fecha de cobro final. |
-| `in_bank` (En Banco) | Registrar Protesto | `protested` | Crea registro de protesto y Nota de Débito automática. |
-| `in_bank` / `protested` | Renovar | `renewed` | Genera nueva letra a 30 días fijados por el banco. |
+| 1 | **Letra de Cambio** (`action_report_letra`) | PDF | Letra → **Imprimir Letra para Firma** o menú **Imprimir** |
+| 2 | **Letra Firmada** | Archivo PDF | Letra → **Ver Letra Firmada** (abre/descarga el PDF subido) |
+| 3 | **Planilla de Letras** (`action_report_letra_planilla`) | PDF | Planilla → **Imprimir Planilla** / **Imprimir Letras** |
+| 4 | **Estado de Cuenta de Letras** (`action_report_estado_cuenta_partner`) | PDF | Cliente → **Imprimir → Estado de Cuenta de Letras** |
+| 5 | **Proyección Semanal** (`action_proyeccion_cobranza`) | Pivot / Gráfico | `Reportes → Proyección Semanal (Pivot)` |
+| 6 | **Resumen Ejecutivo de Cartera** | Excel `.xlsx` | `Reportes → Exportar Resumen Excel / Email` |
 
-### Reglas de Bloqueo Comercial en Pedidos de Venta (`sale.order`):
-- **Regla 1 (Protestos):** Si `partner_id.commercial_blocked == True`, el sistema impide la confirmación de la orden.
-- **Regla 2 (Exceso de Crédito):** Si el cliente pertenece a un Grupo Empresarial y `credit_available < order.amount_total`, el sistema impide la confirmación de la orden indicando el saldo disponible real.
-
----
-
-## 11. CATÁLOGO COMPLETO DE REPORTES Y RUTAS DE ACCESO AL MENÚ
-
-El módulo incluye un conjunto de **6 reportes oficiales** (PDF impresos, Hoja de cálculo Excel profesional y Tableros Analíticos interactivos).
+### Detalle
+1. **Letra de Cambio (PDF).** Formato oficial: girador (Curpisco), aceptante, importe en soles, fechas, banco, tabla de facturas y recuadros de **Firma del Girador** y **Aceptación**. Sirve para imprimir y enviar al cliente **a firmar**.
+2. **Letra Firmada.** No es un reporte QWeb: **abre/descarga** el PDF que cargaste como sustento (para enviar al banco).
+3. **Planilla de Letras (PDF).** Relación de letras con total, cantidad y firmas de **Entregado por** (Gerencia) y **Recibido por** (banco). **Imprimir Letras** descarga todas las letras en un solo PDF.
+4. **Estado de Cuenta de Letras (PDF).** Muestra **línea de crédito vs. utilizado vs. disponible**, estado de bloqueo y detalle de letras activas.
+5. **Proyección Semanal (Pivot/Gráfico).** Vencimientos por vendedor/cliente/semana.
+6. **Resumen Ejecutivo (Excel).** Hoja con formato corporativo, moneda `#,##0.00`, totales y metadatos.
 
 ---
 
-### 📌 1. Reporte PDF: Estado de Cuenta de Crédito y Letras (`action_report_estado_cuenta_partner`)
-- **Descripción:** Estado de cuenta consolidado del cliente o su grupo empresarial.
-- **Contenido:** Razón social del cliente/RUC, **Línea de Crédito aprobada vs utilizada vs disponible**, estado de bloqueo comercial, tabla de todas las letras activas (emisión, vencimiento, banco, N° único y saldo) y alertas de protestos.
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  1. Ve a **Ventas** (o **Contabilidad**) ➔ **Clientes**.
-  2. Haz clic en la ficha del cliente deseado.
-  3. En la barra superior, haz clic en el menú **`Imprimir`** 🖨️ (icono de impresora) ➔ selecciona **`Estado de Cuenta de Letras`**.
-
----
-
-### 📌 2. Reporte Excel (.xlsx): Resumen Ejecutivo de Cartera (`action_enviar_letras_wizard`)
-- **Descripción:** Hoja de cálculo ejecutiva generada en Excel con estilos corporativos (`openpyxl`).
-- **Contenido:** Formato con encabezados azul oscuro (`#2C3E50`), texto en blanco, bordes finos, formateo de moneda (`#,##0.00`), totales automáticos y bloque informativo al pie.
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  - **Opción Directa (Nuevo Menú):** Ve a **Letras de Cambio** ➔ **Reportes** ➔ **Exportar Resumen Excel / Email**.
-  - **Opción en Lista de Letras:** Ve a **Letras de Cambio** ➔ **Operaciones** ➔ **Letras de Cambio** ➔ selecciona las letras ➔ rueda dentada de **Acciones** ➔ **Enviar por Email**.
-  1. En el wizard, selecciona la fecha *Desde / Hasta* y el correo destino.
-  2. Marca la casilla ☑️ **`Incluir Excel resumen`**.
-  3. Haz clic en el botón **`Enviar`**.
-
----
-
-### 📌 3. Reporte Analítico: Proyección Semanal en Tabla Dinámica (Pivot) (`action_proyeccion_cobranza`)
-- **Descripción:** Matriz Pivot interactiva diseñada para la reunión ejecutiva de los lunes.
-- **Contenido:** Vencimientos semanales cruzados por Vendedor comercial (`salesperson_id`) y Cliente (`partner_id`), mostrando importe nominal total y saldo pendiente.
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  - Ve a **Letras de Cambio** ➔ **Reportes** ➔ **Proyección Semanal (Pivot)**.
-  - *O alternativamente:* **Letras de Cambio** ➔ **Seguimiento** ➔ **Proyección Semanal**.
-
----
-
-### 📌 4. Reporte Analítico: Gráfico de Cartera por Vendedor (`view_letra_graph`)
-- **Descripción:** Gráfico de barras interactivo de proyección comercial por vendedor.
-- **Contenido:** Muestra el monto total en cobranza/riesgo asignado a cada vendedor (Donato, Segundo, Roberto, etc.).
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  1. Ve al menú **Letras de Cambio** ➔ **Reportes** ➔ **Proyección Semanal (Pivot)**.
-  2. En la esquina superior derecha (al lado de la barra de búsqueda), haz clic en el **icono de Gráfico de Barras** 📊.
-
----
-
-### 📌 5. Reporte PDF: Letra de Cambio Oficial (`action_report_letra`)
-- **Descripción:** Formato impreso formal de la letra de cambio según normativa peruana.
-- **Contenido:** Razón social del Girador (Curpisco), dirección fiscal, cliente (Aceptante), importe formal en soles (`S/`), fecha de emisión, fecha de vencimiento, banco asignado, tabla de facturas asociadas y firmas para **Girador** y **Aceptación/Sello del Cliente**.
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  1. Ve a **Letras de Cambio** ➔ **Operaciones** ➔ **Letras de Cambio**.
-  2. Abre el formulario de la letra que deseas imprimir.
-  3. Haz clic en el botón **`Imprimir Letra`** (en la barra superior del formulario) o en **`Imprimir`** 🖨️ ➔ **`Letra de Cambio`**.
-
----
-
-### 📌 6. Reporte PDF: Planilla de Envío al Banco (`action_report_letra_planilla`)
-- **Descripción:** Documento agrupador impreso para presentar a ventanilla del banco (BCP, Scotiabank, BBVA).
-- **Contenido:** Banco receptor, fecha de envío, relación detallada de letras (N° Letra, Cliente, Importe, Vencimiento, Estado), total acumulado, cantidad de documentos y firmas de **Entregado por** (Gerencia) y **Recibido por** (Ventanilla del Banco).
-- **🗺️ Ruta del Menú / Clic a Clic:**
-  1. Ve a **Letras de Cambio** ➔ **Operaciones** ➔ **Planillas**.
-  2. Abre la planilla bancaria.
-  3. Haz clic en **`Imprimir Planilla`** (para la planilla firmada por Gerencia) o en **`Imprimir Letras`** (para descargar en un único PDF el paquete completo de letras incluidas).
-
-
+*Fin del manual.*
