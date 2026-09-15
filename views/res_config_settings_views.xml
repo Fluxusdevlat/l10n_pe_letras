@@ -5,33 +5,26 @@
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@id='about']" position="before">
-                <div class="app_settings_block" data-string="Letras de Cambio" string="Letras de Cambio" groups="account.group_account_manager">
-                    <h2>Letras de Cambio</h2>
-                    <field name="letras_currency_id" invisible="1"/>
-                    <div class="row mt16">
-                        <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane"/>
-                            <div class="o_setting_right_pane">
-                                <label for="letras_email_to" string="Email para envío"/>
-                                <div class="text-muted">
-                                    Correo destino para el wizard "Enviar Letras por Email"
-                                </div>
-                                <field name="letras_email_to" placeholder="correo@ejemplo.com" class="o_extra_small"/>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane"/>
-                            <div class="o_setting_right_pane">
-                                <label for="letras_global_credit_limit" string="Techo agregado de líneas de crédito"/>
-                                <div class="text-muted">
-                                    Monto máximo de la suma de líneas de crédito de los grupos empresariales (0 = sin límite)
-                                </div>
-                                <field name="letras_global_credit_limit" widget="monetary" class="o_extra_small"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <xpath expr="//form" position="inside">
+                <field name="letras_currency_id" invisible="1"/>
+                <app data-string="Letras de Cambio" string="Letras de Cambio"
+                     name="letras_settings"
+                     logo="/l10n_pe_letras/static/description/icon.png">
+                    <block title="Configuración de Letras de Cambio" name="letras_config_block">
+                        <setting id="letras_email_setting"
+                                 string="Email para envío de Letras"
+                                 help="Correo destino predeterminado para el wizard 'Enviar Letras por Email'"
+                                 groups="account.group_account_manager">
+                            <field name="letras_email_to" placeholder="correo@ejemplo.com"/>
+                        </setting>
+                        <setting id="letras_global_limit_setting"
+                                 string="Techo Agregado de Líneas de Crédito"
+                                 help="Monto máximo que puede sumar el total de líneas de crédito de los grupos empresariales. Use 0 para no aplicar límite."
+                                 groups="account.group_account_manager">
+                            <field name="letras_global_credit_limit" widget="monetary"/>
+                        </setting>
+                    </block>
+                </app>
             </xpath>
         </field>
     </record>
