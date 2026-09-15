@@ -15,6 +15,7 @@
                         </group>
                         <group string="Datos de Emisión">
                             <field name="partner_id" readonly="1"/>
+                            <field name="instrument_type"/>
                             <field name="bank_id" options="{'no_create': True}"/>
                             <field name="date_emission"/>
                             <field name="date_due" string="Fecha Vencimiento (1ra Cuota / General)"/>

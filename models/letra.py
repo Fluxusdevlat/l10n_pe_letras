@@ -1,3 +1,5 @@
+import base64
+
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError
 from datetime import date, timedelta
@@ -112,8 +114,11 @@ class Letra(models.Model):
 
     @api.onchange('partner_id')
     def _onchange_partner_id_days_term(self):
-        if self.partner_id and self.partner_id.letra_days_term:
-            self.days_term = self.partner_id.letra_days_term
+        if self.partner_id:
+            if self.partner_id.letra_days_term:
+                self.days_term = self.partner_id.letra_days_term
+            if self.partner_id.is_cabal_client:
+                self.instrument_type = 'cabal'
 
     @api.onchange('line_ids')
     def _onchange_line_ids_amount_total(self):
@@ -147,6 +152,24 @@ class Letra(models.Model):
                     raise ValidationError(_(
                         'La factura %s ya está pagada y no puede incluirse '
                         'en una letra.') % move.name)
+
+    @api.constrains('signed_document', 'signed_filename')
+    def _check_signed_document_pdf(self):
+        for letra in self:
+            if not letra.signed_document:
+                continue
+            filename = (letra.signed_filename or '').lower()
+            if filename and not filename.endswith('.pdf'):
+                raise ValidationError(_(
+                    'Solo se permite subir la letra firmada en formato PDF.'))
+            try:
+                content = base64.b64decode(letra.signed_document)
+            except Exception:
+                raise ValidationError(_(
+                    'El archivo cargado no es un PDF válido.'))
+            if not content.startswith(b'%PDF'):
+                raise ValidationError(_(
+                    'Solo se permite subir la letra firmada en formato PDF.'))
 
     def action_open_generate_wizard(self):
         self.ensure_one()

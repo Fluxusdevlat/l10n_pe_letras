@@ -14,6 +14,11 @@ class ResPartner(models.Model):
         ('150', '150 Días (Anticipo)'),
     ], string='Plazo de Crédito (Letras)', default='30')
 
+    is_cabal_client = fields.Boolean(
+        string='Cliente Cabal',
+        help='Marque si el cliente opera bajo la modalidad Cabal (canje de '
+             'factura al 100% en el banco, sin letra ni firma física).')
+
     letra_ids = fields.One2many('l10n.pe.letra', 'partner_id',
                                 string='Letras')
     letra_count = fields.Integer(string='Cant. Letras',

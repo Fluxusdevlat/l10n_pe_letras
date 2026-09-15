@@ -52,6 +52,7 @@ Permite asignar el plazo de crédito predeterminado para las letras de cada clie
 #### Explicación Campo por Campo:
 - **Grupo Empresarial (`credit_group_id`):** Selecciona el grupo corporativo al que pertenece el cliente. Si pertenece a un grupo, la línea de crédito se calculará de forma acumulada entre todas las empresas del grupo.
 - **Plazo de Crédito (Letras) (`letra_days_term`):** Define el plazo predeterminado en días para el cálculo automático de la fecha de vencimiento (`30 Días`, `60 Días`, `90 Días`, `120 Días`, `150 Días (Anticipo)`).
+- **Cliente Cabal (`is_cabal_client`):** Marca este cliente como operación **Cabal** (canje de factura al 100% en el banco, sin letra ni firma física). Al generar una letra desde sus facturas o seleccionarlo en una letra, el sistema propondrá automáticamente el *Tipo de Instrumento* = `Cabal`.
 - **Bloqueado Comercialmente (`commercial_blocked`):** Indicador tipo Checkbox (solo lectura / computado). Se marca automáticamente en **rojo/activo** si el cliente o su grupo empresarial tienen letras protestadas pendientes de regularizar. El valor se recalcula en tiempo real cada vez que se crea o regulariza un protesto.
 - **Motivo de Bloqueo (`commercial_block_reason`):** Muestra el texto explicativo del motivo por el cual el cliente no puede recibir nuevos pedidos confirmados.
 - **Cant. Letras (`letra_count`):** Contador inteligente que muestra el total de letras activas en circulación del cliente.
@@ -193,7 +194,7 @@ Existen dos maneras de emitir una letra: automáticamente desde facturas publica
 - **Tipo (`tipo`):** `Emisión` (letra original de venta) o `Canje` (letra producto de renovación o canje especial).
 - **Banco (`bank_id`):** Banco asignado para el descuento (BCP, Scotiabank, BBVA).
 - **Planilla (`planilla_id`):** Planilla bancaria en la que fue enviada la letra (Autocompletado al asociar a planilla).
-- **Cargar Letra Firmada (PDF / Foto) (`signed_document`):** Campo de carga de archivo donde se sube la letra firmada y sellada por el cliente. **Es obligatorio para poder registrar la firma y enviar al banco** (excepto en instrumentos tipo `Cabal`).
+- **Cargar Letra Firmada (PDF) (`signed_document`):** Campo de carga de archivo donde se sube la letra firmada y sellada por el cliente. **Solo acepta archivos PDF.** Es obligatorio para poder registrar la firma y enviar al banco (excepto en instrumentos tipo `Cabal`, donde el campo no se muestra).
 
 ##### Fechas y Plazos:
 - **Fecha de Emisión (`date_emission`):** Fecha de expedición del documento.
@@ -225,7 +226,7 @@ Cada letra sigue una secuencia estricta de botones de acción:
 2. El estado cambiará a **Enviada**. La letra puede imprimirse en PDF mediante el botón **Imprimir Letra**.
 
 #### Paso 2: Registrar Firma y Adjuntar Documento (`sent` ➔ `signed`)
-1. Una vez que el cliente devuelve la letra física con firma y sello oficial, sube la imagen o PDF en el campo **Cargar Letra Firmada (PDF / Foto)** (*Datos Principales*).
+1. Una vez que el cliente devuelve la letra física con firma y sello oficial, sube el **archivo PDF** en el campo **Cargar Letra Firmada (PDF)** (*Datos Principales*). El sistema **solo acepta PDF**; si subes otro formato, lo rechaza.
    > *También puede adjuntarlo desde el panel lateral de comentarios (**Chatter**), pero el campo dedicado es el método recomendado.*
 2. Mientras no exista documento cargado, verás un aviso azul y el botón **Registrar Firma** **no aparecerá** (no podrás registrar la firma).
 3. Al cargar el documento, aparecerá un aviso verde y el botón **Registrar Firma** se habilitará.
@@ -246,16 +247,22 @@ Cada letra sigue una secuencia estricta de botones de acción:
 ## 4. OPERACIÓN 2: MODALIDAD "CABAL" (CANJE 100% FACTURA)
 
 ### ¿Qué es Cabal?
-Es una modalidad especial utilizada para clientes corporativos donde las facturas se canjean al 100% en la plataforma bancaria (Telecrédito) sin requerir la emisión, firma ni sello físico de una letra en papel.
+Es una modalidad especial utilizada para clientes corporativos donde las facturas se canjean al 100% en la plataforma bancaria (Telecrédito) sin requerir la emisión, firma ni sello físico de una letra en papel. El cliente solo **confirma el vencimiento por correo**.
+
+### ¿Dónde se configura?
+**No se configura en Ajustes**: se elige por operación con el campo **Tipo de Instrumento**. Además, puede dejar a un cliente fijo como Cabal:
+1. Ve a **Ventas/Contabilidad** -> **Clientes** -> abre el cliente.
+2. Pestaña **Letras de Cambio** -> marca la casilla **Cliente Cabal**.
+3. Guarda. Desde ese momento, al generar letras desde sus facturas el sistema propondrá automáticamente `Cabal`.
 
 ### 🖱️ Guía Clic a Clic para Operaciones Cabal:
-1. Ve al menú **Letras de Cambio** -> **Operaciones** -> **Operaciones Cabal**.
+1. Ve al menú **Letras de Cambio** -> **Operaciones** -> **Operaciones Cabal** (o crea una letra y cambia el campo **Tipo de Instrumento** a `Cabal`).
 2. Haz clic en **Crear**.
 3. Selecciona el **Cliente**.
 4. El campo **Tipo de Instrumento** vendrá predeterminado en `Cabal`.
 5. En la pestaña **Facturas Asociadas**, agrega la factura confirmada enviada por correo.
 6. Haz clic en **Guardar**.
-7. En esta modalidad, puedes hacer clic directamente en **Enviar al Banco** (sin pasar por firma física ni requerir adjunto obligatorio).
+7. En esta modalidad, **no se muestra** el campo de documento firmado ni el botón **Registrar Firma**; puedes enviar al banco directamente con **Enviar al Banco**.
 
 ---
 
@@ -385,7 +392,7 @@ Reemplaza por completo las plantillas manuales de Excel para la reunión ejecuti
 | Estado Actual | Botón Disponible | Siguiente Estado | Requisito / Validación de Seguridad |
 |---|---|---|---|
 | `draft` (Borrador) | Enviar al Cliente | `sent` | Ninguno. |
-| `sent` (Enviada) | Registrar Firma | `signed` | **Obligatorio:** Documento firmado cargado en `signed_document` (si es tipo Letra). El botón no aparece hasta cargarlo. |
+| `sent` (Enviada) | Registrar Firma | `signed` | **Obligatorio:** PDF firmado cargado en `signed_document` (solo tipo Letra). El botón no aparece hasta cargarlo. |
 | `signed` (Firmada) | Enviar al Banco | `in_bank` | **Obligatorio:** Documento firmado cargado (campo o chatter) si es tipo Letra. |
 | `in_bank` (En Banco) | Registrar Pago | `paid` | Registra la fecha de cobro final y deja el saldo en `0.00`. |
 | `in_bank` (En Banco) | Registrar Protesto | `protested` | Crea registro de protesto y Nota de Débito automática (si hay gastos). |
@@ -394,7 +401,7 @@ Reemplaza por completo las plantillas manuales de Excel para la reunión ejecuti
 ### Reglas de Negocio Aplicadas en el Módulo:
 
 - **RN-001 (Facturas asociadas):** Solo se pueden asociar a una letra facturas de cliente, **publicadas** y **no pagadas**, y todas deben ser del **mismo cliente**. El sistema bloquea el guardado si no se cumple.
-- **RN-003 (Firma obligatoria):** No se puede registrar la firma ni enviar al banco una letra tipo `Letra de Cambio` sin el documento firmado cargado.
+- **RN-003 (Firma obligatoria):** No se puede registrar la firma ni enviar al banco una letra tipo `Letra de Cambio` sin el PDF firmado cargado. El campo solo acepta archivos PDF.
 - **RN-004 (Plazo de renovación):** Toda renovación se genera forzosamente a **30 días**.
 - **RN-005 (Nota de débito por protesto):** Al protestar con gastos, se genera la nota de débito al cliente.
 - **RN-007 (Techo agregado):** La suma de líneas de crédito de todos los grupos no puede superar el **Techo Agregado** de la compañía, salvo que el grupo tenga marcada la **Aprobación de Excepción**.

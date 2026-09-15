@@ -1,6 +1,6 @@
 {
     'name': 'Letras de Cambio - Perú',
-    'version': '19.0.1.23.0',
+    'version': '19.0.1.24.0',
 
     'summary': 'Gestión de Letras de Cambio para empresas peruanas',
     'description': """

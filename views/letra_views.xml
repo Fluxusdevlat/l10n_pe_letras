@@ -40,10 +40,10 @@
                             type="object" invisible="state != 'draft'"
                             class="btn-primary"/>
                     <button name="action_signed" string="Registrar Firma"
-                            type="object" invisible="state != 'sent' or not can_sign"
+                            type="object" invisible="state != 'sent' or not can_sign or instrument_type == 'cabal'"
                             class="btn-primary"/>
                     <button name="action_send_to_bank" string="Enviar al Banco"
-                            type="object" invisible="state not in ('signed', 'draft')"
+                            type="object" invisible="state not in ('signed', 'draft', 'sent')"
                             class="btn-primary"/>
                     <button name="action_register_protest" string="Registrar Protesto"
                             type="object" invisible="state != 'in_bank'"
@@ -87,7 +87,9 @@
                             <field name="tipo"/>
                             <field name="bank_id" options="{'no_create': True}"/>
                             <field name="planilla_id" readonly="1"/>
-                            <field name="signed_document" filename="signed_filename" widget="binary" string="Cargar Letra Firmada (PDF / Foto)"/>
+                            <field name="signed_document" filename="signed_filename" widget="binary"
+                                   string="Cargar Letra Firmada (PDF)"
+                                   invisible="instrument_type == 'cabal'"/>
                         </group>
                         <group string="Vencimiento y Banco">
                             <field name="date_emission"/>
@@ -114,15 +116,21 @@
                         </group>
                     </group>
                     <div class="alert alert-info" role="alert"
-                         invisible="state != 'sent' or can_sign">
-                        Cargue la letra firmada y sellada (PDF o foto) en el campo
-                        <strong>Cargar Letra Firmada (PDF / Foto)</strong> para habilitar
+                         invisible="state != 'sent' or can_sign or instrument_type == 'cabal'">
+                        Cargue la letra firmada y sellada en formato <strong>PDF</strong> en el campo
+                        <strong>Cargar Letra Firmada (PDF)</strong> para habilitar
                         el botón <strong>Registrar Firma</strong>.
                     </div>
                     <div class="alert alert-success" role="alert"
-                         invisible="state != 'sent' or not can_sign">
+                         invisible="state != 'sent' or not can_sign or instrument_type == 'cabal'">
                         Documento firmado cargado. Ya puede presionar
                         <strong>Registrar Firma</strong>.
+                    </div>
+                    <div class="alert alert-info" role="alert"
+                         invisible="state != 'sent' or instrument_type != 'cabal'">
+                        Operación <strong>Cabal</strong>: no requiere documento firmado.
+                        Puede enviar la factura al banco directamente con
+                        <strong>Enviar al Banco</strong>.
                     </div>
                     <notebook>
                         <page string="Facturas Asociadas">
