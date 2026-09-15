@@ -60,7 +60,7 @@
                     <button name="action_cancel" string="Anular"
                             type="object" invisible="state not in ('draft', 'sent', 'signed')"
                             class="btn-secondary"/>
-                    <button name="action_print_letra" string="Imprimir Letra"
+                    <button name="action_print_letra" string="Imprimir Letra para Firma"
                             type="object"
                             class="btn-secondary"/>
                     <button name="action_view_signed_document" string="Ver Letra Firmada"
