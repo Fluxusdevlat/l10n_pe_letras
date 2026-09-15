@@ -15,4 +15,8 @@ access_letra_generate_wizard_user,letra.generate.wizard.user,model_l10n_pe_letra
 access_letra_generate_wizard_line_user,letra.generate.wizard.line.user,model_l10n_pe_letra_generate_wizard_line,base.group_user,1,1,1,1
 access_letra_renovacion_wizard_user,letra.renovacion.wizard.user,model_l10n_pe_letra_renovacion_wizard,base.group_user,1,1,1,1
 access_letras_email_wizard_user,letras.email.wizard.user,model_l10n_pe_letras_email_wizard,base.group_user,1,1,1,1
+access_letra_grupo_letras_user,letra.grupo.letras.user,model_l10n_pe_letra,group_letra_user,1,1,1,0
+access_letra_grupo_letras_manager,letra.grupo.letras.manager,model_l10n_pe_letra,group_letra_manager,1,1,1,1
+access_letra_planilla_grupo_user,letra.planilla.grupo.user,model_l10n_pe_letra_planilla,group_letra_user,1,1,1,0
+access_letra_planilla_grupo_manager,letra.planilla.grupo.manager,model_l10n_pe_letra_planilla,group_letra_manager,1,1,1,1
 

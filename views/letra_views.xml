@@ -231,10 +231,50 @@
         </field>
     </record>
 
+    <record id="view_letra_kanban" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.kanban</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="date_due"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="o_kanban_record_title">
+                            <field name="name"/> · <field name="partner_id"/>
+                        </div>
+                        <div>
+                            <field name="amount_total" widget="monetary"/>
+                        </div>
+                        <div>
+                            Vence: <field name="date_due"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_letra_calendar" model="ir.ui.view">
+        <field name="name">l10n.pe.letra.calendar</field>
+        <field name="model">l10n.pe.letra</field>
+        <field name="arch" type="xml">
+            <calendar string="Vencimientos de Letras" date_start="date_due"
+                      color="state" mode="month">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+            </calendar>
+        </field>
+    </record>
+
     <record id="action_letra" model="ir.actions.act_window">
         <field name="name">Letras de Cambio</field>
         <field name="res_model">l10n.pe.letra</field>
-        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph</field>
         <field name="help" type="html">
             <p>Gestione las letras de cambio emitidas a sus clientes.</p>
         </field>
@@ -243,9 +283,24 @@
     <record id="action_letra_cabal" model="ir.actions.act_window">
         <field name="name">Operaciones Cabal</field>
         <field name="res_model">l10n.pe.letra</field>
-        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="view_mode">list,kanban,form,pivot,graph</field>
         <field name="domain">[('instrument_type','=','cabal')]</field>
         <field name="context">{'default_instrument_type':'cabal'}</field>
+    </record>
+
+    <record id="action_letra_protestadas" model="ir.actions.act_window">
+        <field name="name">Letras Protestadas</field>
+        <field name="res_model">l10n.pe.letra</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'protested')]</field>
+        <field name="context">{'search_default_state_protested': 1}</field>
+    </record>
+
+    <record id="action_letra_cartera" model="ir.actions.act_window">
+        <field name="name">Letras en Cartera</field>
+        <field name="res_model">l10n.pe.letra</field>
+        <field name="view_mode">list,kanban,form,calendar</field>
+        <field name="domain">[('state', 'in', ('draft', 'sent', 'signed'))]</field>
     </record>
 
     <record id="action_proyeccion_cobranza" model="ir.actions.act_window">

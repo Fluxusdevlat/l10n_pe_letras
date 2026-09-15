@@ -1,8 +1,14 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
+
+    is_protest_debit_note = fields.Boolean(
+        string='Es Nota de Débito de Protesto', copy=False,
+        help='Marca interna: la nota de débito de gastos de protesto puede '
+             'validarse aunque el cliente esté bloqueado.')
 
     letra_line_ids = fields.One2many('l10n.pe.letra.line', 'move_id',
                                      string='Letras Asociadas')
@@ -63,3 +69,15 @@ class AccountMove(models.Model):
                 r.letra_state = 'total'
             else:
                 r.letra_state = 'partial'
+
+    def action_post(self):
+        for move in self:
+            if move.move_type in ('out_invoice', 'out_refund') \
+                    and not move.is_protest_debit_note \
+                    and move.partner_id.commercial_blocked:
+                raise UserError(_(
+                    'No se puede validar la factura. El cliente %s está '
+                    'bloqueado comercialmente. Motivo: %s'
+                ) % (move.partner_id.name,
+                     move.partner_id.commercial_block_reason))
+        return super().action_post()

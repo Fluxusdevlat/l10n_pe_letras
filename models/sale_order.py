@@ -11,6 +11,9 @@ class SaleOrder(models.Model):
     partner_commercial_blocked = fields.Boolean(
         related='partner_id.commercial_blocked',
         string='Cliente Bloqueado')
+    partner_credit_near_limit = fields.Boolean(
+        related='partner_id.credit_near_limit',
+        string='Cerca del Límite de Crédito')
 
     def action_confirm(self):
         for order in self:

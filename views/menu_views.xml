@@ -42,6 +42,12 @@
               parent="menu_letras_root"
               sequence="20"/>
 
+    <menuitem id="menu_letras_cartera"
+              name="Letras en Cartera"
+              parent="menu_letras_tracking"
+              action="action_letra_cartera"
+              sequence="3"/>
+
     <menuitem id="menu_letras_proyeccion"
               name="Proyección Semanal"
               parent="menu_letras_tracking"
@@ -53,6 +59,12 @@
               parent="menu_letras_tracking"
               action="action_letra_protesto"
               sequence="10"/>
+
+    <menuitem id="menu_letras_protestadas"
+              name="Letras Protestadas"
+              parent="menu_letras_tracking"
+              action="action_letra_protestadas"
+              sequence="15"/>
 
     <menuitem id="menu_letras_renovaciones"
               name="Renovaciones"
@@ -78,6 +90,19 @@
               action="action_enviar_letras_wizard"
               sequence="20"/>
 
+    <record id="action_letras_sequence" model="ir.actions.act_window">
+        <field name="name">Secuencias de Letras</field>
+        <field name="res_model">ir.sequence</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('code', 'in', ['l10n.pe.letra', 'l10n.pe.letra.planilla', 'l10n.pe.letra.protesto', 'l10n.pe.letra.renovacion'])]</field>
+    </record>
+
+    <menuitem id="menu_letras_report_estado_cuenta"
+              name="Estado de Cuenta"
+              parent="menu_letras_reports"
+              action="action_letras_clientes"
+              sequence="15"/>
+
 
     <!-- Configuración -->
 
@@ -91,6 +116,24 @@
               parent="menu_letras_config"
               action="action_credit_group"
               sequence="10"/>
+
+    <record id="action_letras_bancos" model="ir.actions.act_window">
+        <field name="name">Bancos</field>
+        <field name="res_model">res.bank</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_letras_bancos"
+              name="Bancos"
+              parent="menu_letras_config"
+              action="action_letras_bancos"
+              sequence="20"/>
+
+    <menuitem id="menu_letras_secuencias"
+              name="Secuencias"
+              parent="menu_letras_config"
+              action="action_letras_sequence"
+              sequence="30"/>
 
     <!-- Integración en menú existente de Contabilidad -->
     <menuitem id="menu_letras_accounting"

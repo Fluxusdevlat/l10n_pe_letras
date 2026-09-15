@@ -8,6 +8,12 @@
             <xpath expr="//notebook" position="inside">
                 <page string="Letras de Cambio" name="letras"
                       invisible="not is_company">
+                    <field name="credit_near_limit" invisible="1"/>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not credit_near_limit">
+                        El cliente está usando el <strong>90% o más</strong> de su
+                        línea de crédito del grupo empresarial.
+                    </div>
                     <group>
                         <group>
                             <field name="credit_group_id"/>
@@ -19,6 +25,7 @@
                         <group>
                             <field name="letra_count"/>
                             <field name="has_letras_protestadas"/>
+                            <field name="credit_usage_pct" widget="percentage"/>
                         </group>
                     </group>
                     <field name="letra_ids">
@@ -32,6 +39,16 @@
                     </field>
                 </page>
             </xpath>
+        </field>
+    </record>
+
+    <record id="action_letras_clientes" model="ir.actions.act_window">
+        <field name="name">Estado de Cuenta de Letras</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_company', '=', True)]</field>
+        <field name="help" type="html">
+            <p>Abra la ficha de un cliente y use <b>Imprimir → Estado de Cuenta de Letras</b>.</p>
         </field>
     </record>
 </odoo>

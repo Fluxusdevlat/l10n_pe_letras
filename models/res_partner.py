@@ -34,6 +34,22 @@ class ResPartner(models.Model):
         string='Motivo de Bloqueo',
         compute='_compute_commercial_blocked')
 
+    credit_usage_pct = fields.Float(string='% Uso Crédito',
+                                    compute='_compute_credit_near_limit')
+    credit_near_limit = fields.Boolean(
+        string='Cerca del Límite de Crédito',
+        compute='_compute_credit_near_limit')
+
+    @api.depends('credit_group_id', 'credit_group_id.credit_limit')
+    def _compute_credit_near_limit(self):
+        for r in self:
+            group = r.credit_group_id
+            pct = 0.0
+            if group and group.credit_limit > 0:
+                pct = group.credit_used / group.credit_limit * 100
+            r.credit_usage_pct = pct
+            r.credit_near_limit = pct >= 90.0
+
     def _compute_letra_count(self):
         for r in self:
             r.letra_count = self.env['l10n.pe.letra'].search_count([

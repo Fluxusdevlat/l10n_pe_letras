@@ -1,4 +1,5 @@
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class CreditGroup(models.Model):
@@ -17,6 +18,8 @@ class CreditGroup(models.Model):
                                   compute='_compute_credit_used')
     credit_available = fields.Monetary(string='Crédito Disponible',
                                        compute='_compute_credit_used')
+    credit_usage_pct = fields.Float(string='% de Uso',
+                                    compute='_compute_credit_used')
 
     pending_orders_amount = fields.Monetary(
         string='Pedidos Pendientes',
@@ -31,6 +34,32 @@ class CreditGroup(models.Model):
                                  default=lambda self: self.env.company)
 
     active = fields.Boolean(default=True)
+
+    exception_approved = fields.Boolean(
+        string='Aprobación de Excepción (Techo Global)',
+        help='Marque esta casilla cuando gerencia autorice superar el techo '
+             'agregado de líneas de crédito de la compañía.')
+    exception_approved_by = fields.Many2one('res.users', string='Aprobado por')
+
+    @api.constrains('credit_limit', 'active', 'company_id', 'exception_approved')
+    def _check_global_credit_limit(self):
+        for r in self:
+            if not r.active or r.exception_approved:
+                continue
+            company = r.company_id or self.env.company
+            limit = company.letras_global_credit_limit
+            if not limit or limit <= 0:
+                continue
+            total = sum(self.env['l10n.pe.credit.group'].search([
+                ('company_id', '=', company.id),
+                ('active', '=', True),
+            ]).mapped('credit_limit'))
+            if total > limit:
+                raise ValidationError(_(
+                    'La suma de las líneas de crédito (S/ %s) supera el techo '
+                    'agregado de la compañía (S/ %s). Marque "Aprobación de '
+                    'Excepción (Techo Global)" previa autorización de gerencia.'
+                ) % ('{:,.2f}'.format(total), '{:,.2f}'.format(limit)))
 
     def _compute_partner_count(self):
         for r in self:
@@ -70,6 +99,7 @@ class CreditGroup(models.Model):
             r.pending_orders_amount = pending_orders_amount
             r.credit_used = total_used
             r.credit_available = r.credit_limit - total_used if r.credit_limit > 0 else 0
+            r.credit_usage_pct = (total_used / r.credit_limit * 100) if r.credit_limit > 0 else 0.0
 
     def _check_blocked(self):
         self.ensure_one()

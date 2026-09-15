@@ -75,6 +75,7 @@ class LetraProtesto(models.Model):
                 'partner_id': r.partner_id.id,
                 'invoice_date': r.date_protest or fields.Date.today(),
                 'ref': _('Gastos de Protesto - Letra %s') % r.letra_id.name,
+                'is_protest_debit_note': True,
                 'invoice_line_ids': [(0, 0, {
                     'name': _('Gastos y Costas de Protesto Bancario - Letra %s') % r.letra_id.name,
                     'quantity': 1,

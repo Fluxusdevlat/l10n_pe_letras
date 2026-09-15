@@ -2,7 +2,7 @@ import base64
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError
-from datetime import date
+from datetime import date, timedelta
 
 
 class Letra(models.Model):
@@ -18,7 +18,9 @@ class Letra(models.Model):
     bank_id = fields.Many2one('res.bank', string='Banco',
                               tracking=True)
     amount_total = fields.Monetary(string='Importe Total', required=True,
-                                   tracking=True)
+                                   tracking=True,
+                                   compute='_compute_amount_total',
+                                   store=True, readonly=False)
     amount_paid = fields.Monetary(string='Importe Pagado', default=0.0)
     amount_residual = fields.Monetary(string='Saldo Pendiente',
                                       compute='_compute_amount_residual',
@@ -110,10 +112,11 @@ class Letra(models.Model):
         if self.partner_id and self.partner_id.letra_days_term:
             self.days_term = self.partner_id.letra_days_term
 
-    @api.onchange('line_ids')
-    def _onchange_line_ids_amount_total(self):
-        if self.line_ids:
-            self.amount_total = sum(self.line_ids.mapped('amount'))
+    @api.depends('line_ids', 'line_ids.amount')
+    def _compute_amount_total(self):
+        for r in self:
+            if r.line_ids:
+                r.amount_total = sum(r.line_ids.mapped('amount'))
 
     def action_open_generate_wizard(self):
         self.ensure_one()
@@ -179,6 +182,34 @@ class Letra(models.Model):
             if not content.startswith(b'%PDF'):
                 raise ValidationError(_(
                     'Solo se permite subir la letra firmada en formato PDF.'))
+
+    @api.constrains('line_ids', 'partner_id')
+    def _check_invoices_same_partner(self):
+        for letra in self:
+            if not letra.partner_id:
+                continue
+            for line in letra.line_ids:
+                if line.move_id.partner_id.commercial_partner_id != \
+                        letra.partner_id.commercial_partner_id:
+                    raise ValidationError(_(
+                        'Todas las facturas asociadas deben pertenecer al '
+                        'mismo cliente de la letra.'))
+
+    @api.constrains('line_ids')
+    def _check_invoices_open(self):
+        for letra in self:
+            for line in letra.line_ids:
+                move = line.move_id
+                if move.move_type not in ('out_invoice', 'out_refund'):
+                    raise ValidationError(_(
+                        'Solo se pueden asociar facturas de cliente a una letra.'))
+                if move.state != 'posted':
+                    raise ValidationError(_(
+                        'La factura %s no está publicada.') % move.name)
+                if move.payment_state in ('paid', 'reversed'):
+                    raise ValidationError(_(
+                        'La factura %s ya está pagada y no puede incluirse '
+                        'en una letra.') % move.name)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -253,6 +284,35 @@ class Letra(models.Model):
     def action_print_letra(self):
         self.ensure_one()
         return self.env.ref('l10n_pe_letras.action_report_letra').report_action(self)
+
+    @api.model
+    def _cron_notify_due_letras(self):
+        today = fields.Date.today()
+        target = today + timedelta(days=7)
+        activity_type = self.env.ref('mail.mail_activity_data_todo',
+                                     raise_if_not_found=False)
+        if not activity_type:
+            return
+        letras = self.search([
+            ('state', '=', 'in_bank'),
+            ('date_due', '>=', today),
+            ('date_due', '<=', target),
+        ])
+        for letra in letras:
+            existing = self.env['mail.activity'].search_count([
+                ('res_model', '=', 'l10n.pe.letra'),
+                ('res_id', '=', letra.id),
+                ('activity_type_id', '=', activity_type.id),
+            ])
+            if existing:
+                continue
+            letra.activity_schedule(
+                'mail.mail_activity_data_todo',
+                date_deadline=letra.date_due,
+                summary=_('Letra %s próxima a vencer') % letra.name,
+                note=_('Contactar al cliente %s por la letra %s que vence el %s.')
+                     % (letra.partner_id.name, letra.name, letra.date_due),
+            )
 
     def action_view_signed_document(self):
         self.ensure_one()

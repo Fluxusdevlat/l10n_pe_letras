@@ -1,6 +1,6 @@
 {
     'name': 'Letras de Cambio - Perú',
-    'version': '19.0.1.35.0',
+    'version': '19.0.1.40.0',
 
 
 
@@ -33,6 +33,7 @@ Módulo para la gestión completa de Letras de Cambio:
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/letra_sequence.xml',
+        'data/letras_cron.xml',
         'views/letra_protesto_views.xml',
         'views/letra_renovacion_views.xml',
         'views/letra_planilla_views.xml',

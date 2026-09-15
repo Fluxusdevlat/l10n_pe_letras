@@ -16,6 +16,13 @@
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Letras de Cambio">
+                    <field name="partner_credit_near_limit" invisible="1"/>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not partner_credit_near_limit">
+                        El cliente está usando el <strong>90% o más</strong> de su
+                        línea de crédito del grupo empresarial. Revise el saldo
+                        disponible antes de confirmar.
+                    </div>
                     <group>
                         <field name="partner_has_letras_protestadas"/>
                         <field name="partner_commercial_blocked"/>
